@@ -39,6 +39,7 @@ jobs:
           }
           EOF
           
+          # Added AdMob Dependency here
           cat << 'EOF' > app/build.gradle
           plugins { id 'com.android.application' }
           android {
@@ -59,6 +60,7 @@ jobs:
           dependencies {
               implementation 'androidx.appcompat:appcompat:1.6.1'
               implementation 'androidx.core:core:1.9.0'
+              implementation 'com.google.android.gms:play-services-ads:23.0.0'
           }
           EOF
 
@@ -89,19 +91,25 @@ jobs:
           </resources>
           EOF
           
-          # MANIFEST (Added Notification & Alarm Permissions)
+          # MANIFEST (Added AdMob App ID & AdActivity)
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.READ_PHONE_STATE" /> 
-              <!-- Notifications Permissions -->
+              <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
               
               <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:requestLegacyExternalStorage="true" android:usesCleartextTraffic="true" android:hardwareAccelerated="true">
+                  
+                  <!-- Sample AdMob App ID (Replace with yours later) -->
+                  <meta-data
+                      android:name="com.google.android.gms.ads.APPLICATION_ID"
+                      android:value="ca-app-pub-3940256099942544~3347511713"/>
+
                   <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|keyboardHidden|screenSize">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -124,7 +132,7 @@ jobs:
           </manifest>
           EOF
 
-          # 🔥 ALARM RECEIVER FOR DAILY PUSH NOTIFICATIONS 🔥
+          # ALARM RECEIVER
           cat << 'EOF' > app/src/main/java/com/earnzio/app/AlarmReceiver.java
           package com.earnzio.app;
           
@@ -163,7 +171,7 @@ jobs:
           }
           EOF
 
-          # MAIN ACTIVITY LAYOUT (XML) - Added Native Spinner
+          # MAIN ACTIVITY LAYOUT (XML)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -189,7 +197,6 @@ jobs:
                   android:layout_height="match_parent"
                   android:background="#ffffff" />
 
-              <!-- NATIVE GREEN SPINNER TO PREVENT BLANK SCREEN -->
               <ProgressBar
                   android:id="@+id/nativeSpinner"
                   android:layout_width="50dp"
@@ -201,7 +208,7 @@ jobs:
           </FrameLayout>
           EOF
           
-          # MAIN ACTIVITY JAVA CODE (Notifications & Spinner logic)
+          # MAIN ACTIVITY JAVA CODE (WITH ADMOB LOGIC)
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
@@ -220,6 +227,7 @@ jobs:
           import android.os.Build;
           import android.os.Bundle;
           import android.provider.Settings;
+          import android.util.Log;
           import android.view.View;
           import android.view.Window;
           import android.view.WindowManager;
@@ -235,7 +243,18 @@ jobs:
           import android.widget.ProgressBar;
           import android.widget.Toast;
           import android.widget.VideoView;
+          import androidx.annotation.NonNull;
           import androidx.appcompat.app.AppCompatActivity;
+          
+          // AdMob Imports
+          import com.google.android.gms.ads.AdError;
+          import com.google.android.gms.ads.AdRequest;
+          import com.google.android.gms.ads.FullScreenContentCallback;
+          import com.google.android.gms.ads.LoadAdError;
+          import com.google.android.gms.ads.MobileAds;
+          import com.google.android.gms.ads.rewarded.RewardedAd;
+          import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
+
           import java.util.Calendar;
 
           public class MainActivity extends AppCompatActivity {
@@ -245,6 +264,26 @@ jobs:
               private ImageView splashPlaceholder;
               private ProgressBar nativeSpinner;
               
+              private RewardedAd rewardedAd;
+              private final String TAG = "MainActivity";
+              
+              // Sample Test Ad Unit ID (Replace with your Real AdMob Unit ID later)
+              private final String AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"; 
+
+              private void loadRewardedAd() {
+                  AdRequest adRequest = new AdRequest.Builder().build();
+                  RewardedAd.load(this, AD_UNIT_ID, adRequest, new RewardedAdLoadCallback() {
+                      @Override
+                      public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                          rewardedAd = null;
+                      }
+                      @Override
+                      public void onAdLoaded(@NonNull RewardedAd ad) {
+                          rewardedAd = ad;
+                      }
+                  });
+              }
+
               private boolean isNetworkAvailable() {
                   ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
                   if (cm != null) {
@@ -269,7 +308,6 @@ jobs:
                   }
               }
 
-              // 🔥 SCHEDULE NOTIFICATION 🔥
               private void scheduleDailyNotification() {
                   AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                   Intent intent = new Intent(this, AlarmReceiver.class);
@@ -280,19 +318,24 @@ jobs:
                   calendar.set(Calendar.MINUTE, 0);
                   calendar.set(Calendar.SECOND, 0);
                   
-                  // If 5 AM passed today, set for tomorrow. 
-                  // Every time user opens the app, it pushes the next notification to tomorrow! (Stops the hourly repeat)
                   if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
                       calendar.add(Calendar.DAY_OF_YEAR, 1);
                   }
                   
                   if (alarmManager != null) {
-                      alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HOUR, pendingIntent);
+                      alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
                   }
               }
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  
+                  // Initialize AdMob
+                  MobileAds.initialize(this, initializationStatus -> {
+                      loadRewardedAd();
+                  });
+
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                       Window window = getWindow();
                       window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -306,7 +349,6 @@ jobs:
                       window.getDecorView().setSystemUiVisibility(flags);
                   }
 
-                  super.onCreate(savedInstanceState);
                   setContentView(R.layout.activity_main);
                   
                   webView = findViewById(R.id.webView);
@@ -315,7 +357,7 @@ jobs:
                   nativeSpinner = findViewById(R.id.nativeSpinner);
                   
                   requestRequiredPermissions();
-                  scheduleDailyNotification(); // Schedule notification
+                  scheduleDailyNotification(); 
                   
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
@@ -344,7 +386,7 @@ jobs:
                       public void onPageFinished(WebView view, String url) {
                           super.onPageFinished(view, url);
                           String deviceId = webAppInterface.getDeviceId();
-                          String jsToInject = "javascript:(function(){ localStorage.setItem('deviceId', '" + deviceId + "'); })();";
+                          String jsToInject = "javascript:(function(){ localStorage.setItem('deviceId', '" + deviceId + "'); window.isNativeApp = true; })();";
                           view.evaluateJavascript(jsToInject, null);
                       }
 
@@ -379,7 +421,7 @@ jobs:
                   if (!isNetworkAvailable()) {
                       showOfflinePage(webView);
                   } else {
-                      webView.loadUrl("https://earnzio-org.blogspot.com/");
+                      webView.loadUrl("https://earnzio-org.blogspot.com/"); // Blogger URL
                   }
                   
                   int videoResId = getResources().getIdentifier("splash_video", "raw", getPackageName());
@@ -407,7 +449,6 @@ jobs:
                           videoView.setVisibility(View.GONE);
                           splashPlaceholder.setVisibility(View.GONE);
                           webView.setVisibility(View.VISIBLE);
-                          // 🔥 Show native spinner until Javascript calls appReadyToDisplay() 🔥
                           nativeSpinner.setVisibility(View.VISIBLE); 
                       });
                       
@@ -434,7 +475,6 @@ jobs:
                       return Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
                   }
 
-                  // Hides the Native Spinner once Blogger JS resolves
                   @JavascriptInterface
                   public void appReadyToDisplay() {
                       ((Activity) mContext).runOnUiThread(() -> {
@@ -447,6 +487,37 @@ jobs:
                   @JavascriptInterface
                   public void showToast(String message) {
                       ((Activity) mContext).runOnUiThread(() -> Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show());
+                  }
+
+                  // 🔥 THIS IS CALLED FROM BLOGGER WHEN "WATCH AD" IS CLICKED 🔥
+                  @JavascriptInterface
+                  public void playAdMobVideo(String type) {
+                      ((Activity) mContext).runOnUiThread(() -> {
+                          if (rewardedAd != null) {
+                              rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                                  @Override
+                                  public void onAdShowedFullScreenContent() { }
+                                  @Override
+                                  public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                      rewardedAd = null;
+                                  }
+                                  @Override
+                                  public void onAdDismissedFullScreenContent() {
+                                      rewardedAd = null;
+                                      loadRewardedAd(); // Load next ad
+                                  }
+                              });
+
+                              Activity activityContext = MainActivity.this;
+                              rewardedAd.show(activityContext, rewardItem -> {
+                                  // 🔥 AD COMPLETED! SEND SIGNAL BACK TO BLOGGER TO ADD COINS 🔥
+                                  webView.evaluateJavascript("javascript:nativeAdCompleted('" + type + "');", null);
+                              });
+                          } else {
+                              Toast.makeText(mContext, "Ad is still loading. Please try again in a few seconds.", Toast.LENGTH_SHORT).show();
+                              loadRewardedAd();
+                          }
+                      });
                   }
               }
           }
