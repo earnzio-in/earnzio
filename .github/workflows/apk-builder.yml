@@ -84,18 +84,22 @@ jobs:
                   <item name="android:windowBackground">@android:color/white</item>
                   <item name="android:statusBarColor">#ffffff</item>
                   <item name="android:windowLightStatusBar">true</item>
+                  <item name="android:navigationBarColor">#ffffff</item>
               </style>
           </resources>
           EOF
           
-          # MANIFEST
+          # MANIFEST (Added Notification & Alarm Permissions)
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <!-- Required Permissions ONLY -->
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.READ_PHONE_STATE" /> 
+              <!-- Notifications Permissions -->
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+              <uses-permission android:name="android.permission.WAKE_LOCK" />
               
               <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:requestLegacyExternalStorage="true" android:usesCleartextTraffic="true" android:hardwareAccelerated="true">
                   <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|keyboardHidden|screenSize">
@@ -114,11 +118,52 @@ jobs:
                           android:name="android.support.FILE_PROVIDER_PATHS"
                           android:resource="@xml/file_paths" />
                   </provider>
+
+                  <receiver android:name=".AlarmReceiver" android:exported="false" />
               </application>
           </manifest>
           EOF
 
-          # MAIN ACTIVITY LAYOUT (XML)
+          # 🔥 ALARM RECEIVER FOR DAILY PUSH NOTIFICATIONS 🔥
+          cat << 'EOF' > app/src/main/java/com/earnzio/app/AlarmReceiver.java
+          package com.earnzio.app;
+          
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.content.BroadcastReceiver;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.os.Build;
+          import androidx.core.app.NotificationCompat;
+
+          public class AlarmReceiver extends BroadcastReceiver {
+              @Override
+              public void onReceive(Context context, Intent intent) {
+                  NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                      NotificationChannel channel = new NotificationChannel("EARNZIO_ALERTS", "Earnzio Alerts", NotificationManager.IMPORTANCE_HIGH);
+                      nm.createNotificationChannel(channel);
+                  }
+                  Intent i = new Intent(context, MainActivity.class);
+                  i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                  PendingIntent pi = PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_IMMUTABLE);
+                  
+                  NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "EARNZIO_ALERTS")
+                          .setSmallIcon(android.R.drawable.ic_dialog_info)
+                          .setContentTitle("Daily Earnings waiting! 💰")
+                          .setContentText("Open the app now to claim your daily coins!")
+                          .setAutoCancel(true)
+                          .setContentIntent(pi)
+                          .setPriority(NotificationCompat.PRIORITY_HIGH)
+                          .setDefaults(NotificationCompat.DEFAULT_ALL);
+                          
+                  nm.notify(101, builder.build());
+              }
+          }
+          EOF
+
+          # MAIN ACTIVITY LAYOUT (XML) - Added Native Spinner
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -138,23 +183,33 @@ jobs:
                   android:layout_height="match_parent"
                   android:layout_gravity="center" />
 
-              <!-- 🔥 This white view covers the black screen until video is 100% ready to play 🔥 -->
               <ImageView
                   android:id="@+id/splashPlaceholder"
                   android:layout_width="match_parent"
                   android:layout_height="match_parent"
                   android:background="#ffffff" />
 
+              <!-- NATIVE GREEN SPINNER TO PREVENT BLANK SCREEN -->
+              <ProgressBar
+                  android:id="@+id/nativeSpinner"
+                  android:layout_width="50dp"
+                  android:layout_height="50dp"
+                  android:layout_gravity="center"
+                  android:visibility="gone"
+                  android:indeterminateTint="#10b981" />
+
           </FrameLayout>
           EOF
           
-          # MAIN ACTIVITY JAVA CODE
+          # MAIN ACTIVITY JAVA CODE (Notifications & Spinner logic)
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
           import android.Manifest;
           import android.annotation.SuppressLint;
           import android.app.Activity;
+          import android.app.AlarmManager;
+          import android.app.PendingIntent;
           import android.content.Context;
           import android.content.Intent;
           import android.graphics.Color;
@@ -177,15 +232,18 @@ jobs:
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
           import android.widget.ImageView;
+          import android.widget.ProgressBar;
           import android.widget.Toast;
           import android.widget.VideoView;
           import androidx.appcompat.app.AppCompatActivity;
+          import java.util.Calendar;
 
           public class MainActivity extends AppCompatActivity {
               private WebAppInterface webAppInterface;
               private WebView webView;
               private VideoView videoView;
               private ImageView splashPlaceholder;
+              private ProgressBar nativeSpinner;
               
               private boolean isNetworkAvailable() {
                   ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -203,7 +261,33 @@ jobs:
               
               private void requestRequiredPermissions() {
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                      requestPermissions(new String[]{ Manifest.permission.READ_PHONE_STATE }, 1);
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                          requestPermissions(new String[]{ Manifest.permission.READ_PHONE_STATE, Manifest.permission.POST_NOTIFICATIONS }, 1);
+                      } else {
+                          requestPermissions(new String[]{ Manifest.permission.READ_PHONE_STATE }, 1);
+                      }
+                  }
+              }
+
+              // 🔥 SCHEDULE NOTIFICATION 🔥
+              private void scheduleDailyNotification() {
+                  AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                  Intent intent = new Intent(this, AlarmReceiver.class);
+                  PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  
+                  Calendar calendar = Calendar.getInstance();
+                  calendar.set(Calendar.HOUR_OF_DAY, 5);
+                  calendar.set(Calendar.MINUTE, 0);
+                  calendar.set(Calendar.SECOND, 0);
+                  
+                  // If 5 AM passed today, set for tomorrow. 
+                  // Every time user opens the app, it pushes the next notification to tomorrow! (Stops the hourly repeat)
+                  if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+                      calendar.add(Calendar.DAY_OF_YEAR, 1);
+                  }
+                  
+                  if (alarmManager != null) {
+                      alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HOUR, pendingIntent);
                   }
               }
 
@@ -214,7 +298,7 @@ jobs:
                       window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
                       window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
                       window.setStatusBarColor(Color.WHITE);
-                      window.setNavigationBarColor(Color.WHITE); // Fix for bottom black bar
+                      window.setNavigationBarColor(Color.WHITE);
                       int flags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                           flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
@@ -228,8 +312,10 @@ jobs:
                   webView = findViewById(R.id.webView);
                   videoView = findViewById(R.id.videoView);
                   splashPlaceholder = findViewById(R.id.splashPlaceholder);
+                  nativeSpinner = findViewById(R.id.nativeSpinner);
                   
                   requestRequiredPermissions();
+                  scheduleDailyNotification(); // Schedule notification
                   
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
@@ -237,10 +323,7 @@ jobs:
                   webSettings.setAllowFileAccess(true);
                   webSettings.setAllowContentAccess(true);
                   webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                  
-                  // 🔥 THIS IS THE FIX FOR SOUNDS NOT PLAYING IN APP 🔥
                   webSettings.setMediaPlaybackRequiresUserGesture(false); 
-                  
                   webSettings.setUserAgentString("Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
 
                   CookieManager.getInstance().setAcceptCookie(true);
@@ -286,22 +369,7 @@ jobs:
                                   }
                               }
                           }
-
                           if (url.startsWith("http://") || url.startsWith("https://")) { return false; }
-                          
-                          if (url.startsWith("intent://") || url.startsWith("upi://") || url.startsWith("paytmmp://") || url.startsWith("tez://") || url.startsWith("phonepe://")) {
-                              try {
-                                  Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-                                  if (intent != null) {
-                                      if (getPackageManager().resolveActivity(intent, 0) == null) {
-                                          String fallbackUrl = intent.getStringExtra("browser_fallback_url");
-                                          if (fallbackUrl != null) { view.loadUrl(fallbackUrl); return true; }
-                                      }
-                                      startActivity(intent);
-                                      return true;
-                                  }
-                              } catch (Exception e) { return true; }
-                          }
                           return true;
                       }
                   });
@@ -314,7 +382,6 @@ jobs:
                       webView.loadUrl("https://earnzio-org.blogspot.com/");
                   }
                   
-                  // 🔥 ZERO-MILLISECOND BLACK SCREEN VIDEO LOGIC 🔥
                   int videoResId = getResources().getIdentifier("splash_video", "raw", getPackageName());
                   if(videoResId != 0) {
                       Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + videoResId);
@@ -340,6 +407,8 @@ jobs:
                           videoView.setVisibility(View.GONE);
                           splashPlaceholder.setVisibility(View.GONE);
                           webView.setVisibility(View.VISIBLE);
+                          // 🔥 Show native spinner until Javascript calls appReadyToDisplay() 🔥
+                          nativeSpinner.setVisibility(View.VISIBLE); 
                       });
                       
                       videoView.setOnErrorListener((mp, what, extra) -> {
@@ -363,6 +432,16 @@ jobs:
                   @SuppressLint("HardwareIds")
                   public String getDeviceId() {
                       return Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+                  }
+
+                  // Hides the Native Spinner once Blogger JS resolves
+                  @JavascriptInterface
+                  public void appReadyToDisplay() {
+                      ((Activity) mContext).runOnUiThread(() -> {
+                          if(nativeSpinner != null) {
+                              nativeSpinner.setVisibility(View.GONE);
+                          }
+                      });
                   }
 
                   @JavascriptInterface
