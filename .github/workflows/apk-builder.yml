@@ -84,7 +84,6 @@ jobs:
                   <item name="android:windowBackground">@android:color/white</item>
                   <item name="android:statusBarColor">#ffffff</item>
                   <item name="android:windowLightStatusBar">true</item>
-                  <item name="android:navigationBarColor">#ffffff</item>
               </style>
           </resources>
           EOF
@@ -139,6 +138,7 @@ jobs:
                   android:layout_height="match_parent"
                   android:layout_gravity="center" />
 
+              <!-- 🔥 This white view covers the black screen until video is 100% ready to play 🔥 -->
               <ImageView
                   android:id="@+id/splashPlaceholder"
                   android:layout_width="match_parent"
@@ -209,17 +209,15 @@ jobs:
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
-                  // 🔥 FIX FOR BOTTOM BLACK BAR (NAVIGATION BAR) 🔥
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                       Window window = getWindow();
                       window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
                       window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
                       window.setStatusBarColor(Color.WHITE);
-                      window.setNavigationBarColor(Color.WHITE); // Make bottom bar white
-
+                      window.setNavigationBarColor(Color.WHITE); // Fix for bottom black bar
                       int flags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
                       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR; // Make bottom bar icons dark
+                          flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
                       }
                       window.getDecorView().setSystemUiVisibility(flags);
                   }
@@ -239,6 +237,10 @@ jobs:
                   webSettings.setAllowFileAccess(true);
                   webSettings.setAllowContentAccess(true);
                   webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                  
+                  // 🔥 THIS IS THE FIX FOR SOUNDS NOT PLAYING IN APP 🔥
+                  webSettings.setMediaPlaybackRequiresUserGesture(false); 
+                  
                   webSettings.setUserAgentString("Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
 
                   CookieManager.getInstance().setAcceptCookie(true);
@@ -312,6 +314,7 @@ jobs:
                       webView.loadUrl("https://earnzio-org.blogspot.com/");
                   }
                   
+                  // 🔥 ZERO-MILLISECOND BLACK SCREEN VIDEO LOGIC 🔥
                   int videoResId = getResources().getIdentifier("splash_video", "raw", getPackageName());
                   if(videoResId != 0) {
                       Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + videoResId);
