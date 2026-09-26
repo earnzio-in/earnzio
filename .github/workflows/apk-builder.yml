@@ -84,6 +84,7 @@ jobs:
                   <item name="android:windowBackground">@android:color/white</item>
                   <item name="android:statusBarColor">#ffffff</item>
                   <item name="android:windowLightStatusBar">true</item>
+                  <item name="android:navigationBarColor">#ffffff</item>
               </style>
           </resources>
           EOF
@@ -118,7 +119,7 @@ jobs:
           </manifest>
           EOF
 
-          # MAIN ACTIVITY LAYOUT (XML) - Added splashPlaceholder to hide the black flash
+          # MAIN ACTIVITY LAYOUT (XML)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -138,7 +139,6 @@ jobs:
                   android:layout_height="match_parent"
                   android:layout_gravity="center" />
 
-              <!-- 🔥 This white view covers the black screen until video is 100% ready to play 🔥 -->
               <ImageView
                   android:id="@+id/splashPlaceholder"
                   android:layout_width="match_parent"
@@ -209,12 +209,19 @@ jobs:
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
+                  // 🔥 FIX FOR BOTTOM BLACK BAR (NAVIGATION BAR) 🔥
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                       Window window = getWindow();
                       window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
                       window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
                       window.setStatusBarColor(Color.WHITE);
-                      window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                      window.setNavigationBarColor(Color.WHITE); // Make bottom bar white
+
+                      int flags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                          flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR; // Make bottom bar icons dark
+                      }
+                      window.getDecorView().setSystemUiVisibility(flags);
                   }
 
                   super.onCreate(savedInstanceState);
@@ -305,7 +312,6 @@ jobs:
                       webView.loadUrl("https://earnzio-org.blogspot.com/");
                   }
                   
-                  // 🔥 ZERO-MILLISECOND BLACK SCREEN VIDEO LOGIC 🔥
                   int videoResId = getResources().getIdentifier("splash_video", "raw", getPackageName());
                   if(videoResId != 0) {
                       Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + videoResId);
@@ -316,7 +322,6 @@ jobs:
                           mp.setLooping(false);
                           mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
                           
-                          // 🔥 Wait until the EXACT millisecond the first frame renders to remove the white cover 🔥
                           mp.setOnInfoListener((mediaPlayer, what, extra) -> {
                               if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
                                   splashPlaceholder.setVisibility(View.GONE);
