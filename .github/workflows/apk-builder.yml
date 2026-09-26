@@ -20,6 +20,7 @@ jobs:
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/raw
+          mkdir -p app/src/main/res/layout
           
           echo "include ':app'" > settings.gradle
           
@@ -61,11 +62,11 @@ jobs:
           }
           EOF
 
-          # APP ICON
-          wget -O app/src/main/res/drawable/app_icon.png "https://i.ibb.co/JRdfgm0T/116103-100kb.jpg"
+          # APP ICON (UPDATED)
+          wget -O app/src/main/res/drawable/app_icon.png "https://res.cloudinary.com/ixxjuj5g/image/upload/v1790382703/20260926_003238.jpg"
 
-          # SPLASH VIDEO DOWNLOAD DIRECTLY INTO APP FOR ZERO DELAY
-          wget -O app/src/main/res/raw/splash_video.mp4 "https://res.cloudinary.com/ixxjuj5g/video/upload/v1790381878/InShot_20260926_054447616.mp4"
+          # SPLASH VIDEO (UPDATED - Downloaded directly to raw folder)
+          wget -O app/src/main/res/raw/splash_video.mp4 "https://res.cloudinary.com/ixxjuj5g/video/upload/v1790382792/InShot_20260926_054447616.mp4"
 
           # FILE PROVIDER
           cat << 'EOF' > app/src/main/res/xml/file_paths.xml
@@ -80,9 +81,9 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
               <style name="Theme.App" parent="Theme.AppCompat.Light.NoActionBar">
-                  <item name="android:windowBackground">@android:color/black</item>
-                  <item name="android:statusBarColor">#000000</item>
-                  <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:windowBackground">@android:color/white</item>
+                  <item name="android:statusBarColor">#ffffff</item>
+                  <item name="android:windowLightStatusBar">true</item>
               </style>
           </resources>
           EOF
@@ -116,6 +117,29 @@ jobs:
               </application>
           </manifest>
           EOF
+
+          # MAIN ACTIVITY LAYOUT (XML) - This ensures full screen video without black borders
+          cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#ffffff">
+
+              <WebView
+                  android:id="@+id/webView"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:visibility="gone" />
+
+              <VideoView
+                  android:id="@+id/videoView"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:layout_gravity="center" />
+
+          </FrameLayout>
+          EOF
           
           # MAIN ACTIVITY JAVA CODE
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
@@ -124,13 +148,9 @@ jobs:
           import android.Manifest;
           import android.annotation.SuppressLint;
           import android.app.Activity;
-          import android.app.Dialog;
           import android.content.Context;
           import android.content.Intent;
-          import android.content.pm.PackageManager;
           import android.graphics.Color;
-          import android.graphics.Typeface;
-          import android.graphics.drawable.ColorDrawable;
           import android.media.MediaPlayer;
           import android.net.ConnectivityManager;
           import android.net.NetworkInfo;
@@ -138,36 +158,22 @@ jobs:
           import android.os.Build;
           import android.os.Bundle;
           import android.provider.Settings;
-          import android.view.Gravity;
           import android.view.View;
-          import android.view.ViewGroup;
           import android.view.Window;
           import android.view.WindowManager;
           import android.webkit.CookieManager;
           import android.webkit.JavascriptInterface;
-          import android.webkit.PermissionRequest;
-          import android.webkit.ValueCallback;
           import android.webkit.WebChromeClient;
           import android.webkit.WebResourceError;
           import android.webkit.WebResourceRequest;
           import android.webkit.WebSettings;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
-          import android.widget.FrameLayout;
-          import android.widget.LinearLayout;
-          import android.widget.ProgressBar;
-          import android.widget.TextView;
           import android.widget.Toast;
           import android.widget.VideoView;
           import androidx.appcompat.app.AppCompatActivity;
-          import androidx.core.content.FileProvider;
-          
-          import java.io.File;
-          import java.io.FileOutputStream;
 
           public class MainActivity extends AppCompatActivity {
-              private ValueCallback<Uri[]> mFilePathCallback;
-              private final static int FILECHOOSER_RESULTCODE = 1;
               private WebAppInterface webAppInterface;
               private WebView webView;
               private VideoView videoView;
@@ -194,22 +200,20 @@ jobs:
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
+                  // Make activity full screen for splash
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                      Window window = getWindow();
+                      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                      window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                      window.setStatusBarColor(Color.WHITE);
+                      window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                  }
+
                   super.onCreate(savedInstanceState);
+                  setContentView(R.layout.activity_main);
                   
-                  // 🔥 NATIVE VIDEO SPLASH SCREEN SETUP 🔥
-                  FrameLayout rootLayout = new FrameLayout(this);
-                  rootLayout.setBackgroundColor(Color.BLACK);
-                  setContentView(rootLayout);
-                  
-                  webView = new WebView(this);
-                  webView.setBackgroundColor(Color.WHITE); 
-                  webView.setVisibility(View.GONE); // Hide initially while video plays
-                  rootLayout.addView(webView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                  
-                  videoView = new VideoView(this);
-                  FrameLayout.LayoutParams videoParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-                  videoParams.gravity = Gravity.CENTER;
-                  rootLayout.addView(videoView, videoParams);
+                  webView = findViewById(R.id.webView);
+                  videoView = findViewById(R.id.videoView);
                   
                   requestRequiredPermissions();
                   
@@ -247,11 +251,11 @@ jobs:
                       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                           String url = request.getUrl().toString();
                           
-                          // 🔥 WHATSAPP & INTENT INTERCEPTOR FOR DIRECT APP OPENING 🔥
+                          // WhatsApp Intent
                           if (url.startsWith("https://api.whatsapp.com/") || url.startsWith("https://wa.me/") || url.startsWith("whatsapp://")) {
                               try {
                                   Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                                  intent.setPackage("com.whatsapp"); // Force WhatsApp
+                                  intent.setPackage("com.whatsapp"); 
                                   startActivity(intent);
                                   return true;
                               } catch (Exception e) {
@@ -285,12 +289,7 @@ jobs:
                       }
                   });
 
-                  webView.setWebChromeClient(new WebChromeClient() {
-                      @Override
-                      public void onPermissionRequest(final PermissionRequest request) {
-                          request.grant(request.getResources());
-                      }
-                  });
+                  webView.setWebChromeClient(new WebChromeClient());
 
                   if (!isNetworkAvailable()) {
                       showOfflinePage(webView);
@@ -298,30 +297,38 @@ jobs:
                       webView.loadUrl("https://earnzio-org.blogspot.com/");
                   }
                   
-                  // 🔥 START SPLASH VIDEO 🔥
+                  // 🔥 START SPLASH VIDEO (FULLSCREEN, NO SOUND, NO DELAY) 🔥
                   int videoResId = getResources().getIdentifier("splash_video", "raw", getPackageName());
                   if(videoResId != 0) {
                       Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + videoResId);
                       videoView.setVideoURI(videoUri);
+                      
                       videoView.setOnPreparedListener(mp -> {
+                          // Mute the video
+                          mp.setVolume(0f, 0f);
                           mp.setLooping(false);
+                          
+                          // Make it fill the screen properly
+                          mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+                          
                           videoView.start();
+                          // Set background to transparent once video is ready to hide any black loading frame
+                          videoView.setBackgroundColor(Color.TRANSPARENT);
                       });
+                      
                       videoView.setOnCompletionListener(mp -> {
                           videoView.setVisibility(View.GONE);
                           webView.setVisibility(View.VISIBLE);
-                          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                              Window window = getWindow();
-                              window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                              window.setStatusBarColor(Color.parseColor("#ffffff"));
-                              window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                          }
                       });
+                      
                       videoView.setOnErrorListener((mp, what, extra) -> {
                           videoView.setVisibility(View.GONE);
                           webView.setVisibility(View.VISIBLE);
                           return true;
                       });
+                      
+                      // Initial background color white to prevent black flash
+                      videoView.setBackgroundColor(Color.WHITE);
                   } else {
                       videoView.setVisibility(View.GONE);
                       webView.setVisibility(View.VISIBLE);
@@ -330,7 +337,6 @@ jobs:
 
               public class WebAppInterface {
                   Context mContext;
-
                   WebAppInterface(Context c) { mContext = c; }
                   
                   @JavascriptInterface
