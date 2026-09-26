@@ -62,10 +62,10 @@ jobs:
           }
           EOF
 
-          # APP ICON (UPDATED)
+          # APP ICON
           wget -O app/src/main/res/drawable/app_icon.png "https://res.cloudinary.com/ixxjuj5g/image/upload/v1790382703/20260926_003238.jpg"
 
-          # SPLASH VIDEO (UPDATED - Downloaded directly to raw folder)
+          # SPLASH VIDEO 
           wget -O app/src/main/res/raw/splash_video.mp4 "https://res.cloudinary.com/ixxjuj5g/video/upload/v1790382792/InShot_20260926_054447616.mp4"
 
           # FILE PROVIDER
@@ -118,7 +118,7 @@ jobs:
           </manifest>
           EOF
 
-          # MAIN ACTIVITY LAYOUT (XML) - This ensures full screen video without black borders
+          # MAIN ACTIVITY LAYOUT (XML) - Added splashPlaceholder to hide the black flash
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -137,6 +137,13 @@ jobs:
                   android:layout_width="match_parent"
                   android:layout_height="match_parent"
                   android:layout_gravity="center" />
+
+              <!-- 🔥 This white view covers the black screen until video is 100% ready to play 🔥 -->
+              <ImageView
+                  android:id="@+id/splashPlaceholder"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:background="#ffffff" />
 
           </FrameLayout>
           EOF
@@ -169,6 +176,7 @@ jobs:
           import android.webkit.WebSettings;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
+          import android.widget.ImageView;
           import android.widget.Toast;
           import android.widget.VideoView;
           import androidx.appcompat.app.AppCompatActivity;
@@ -177,6 +185,7 @@ jobs:
               private WebAppInterface webAppInterface;
               private WebView webView;
               private VideoView videoView;
+              private ImageView splashPlaceholder;
               
               private boolean isNetworkAvailable() {
                   ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -200,7 +209,6 @@ jobs:
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
-                  // Make activity full screen for splash
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                       Window window = getWindow();
                       window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -214,6 +222,7 @@ jobs:
                   
                   webView = findViewById(R.id.webView);
                   videoView = findViewById(R.id.videoView);
+                  splashPlaceholder = findViewById(R.id.splashPlaceholder);
                   
                   requestRequiredPermissions();
                   
@@ -251,7 +260,6 @@ jobs:
                       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                           String url = request.getUrl().toString();
                           
-                          // WhatsApp Intent
                           if (url.startsWith("https://api.whatsapp.com/") || url.startsWith("https://wa.me/") || url.startsWith("whatsapp://")) {
                               try {
                                   Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -297,40 +305,44 @@ jobs:
                       webView.loadUrl("https://earnzio-org.blogspot.com/");
                   }
                   
-                  // 🔥 START SPLASH VIDEO (FULLSCREEN, NO SOUND, NO DELAY) 🔥
+                  // 🔥 ZERO-MILLISECOND BLACK SCREEN VIDEO LOGIC 🔥
                   int videoResId = getResources().getIdentifier("splash_video", "raw", getPackageName());
                   if(videoResId != 0) {
                       Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + videoResId);
                       videoView.setVideoURI(videoUri);
                       
                       videoView.setOnPreparedListener(mp -> {
-                          // Mute the video
                           mp.setVolume(0f, 0f);
                           mp.setLooping(false);
-                          
-                          // Make it fill the screen properly
                           mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
                           
+                          // 🔥 Wait until the EXACT millisecond the first frame renders to remove the white cover 🔥
+                          mp.setOnInfoListener((mediaPlayer, what, extra) -> {
+                              if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                                  splashPlaceholder.setVisibility(View.GONE);
+                                  return true;
+                              }
+                              return false;
+                          });
+                          
                           videoView.start();
-                          // Set background to transparent once video is ready to hide any black loading frame
-                          videoView.setBackgroundColor(Color.TRANSPARENT);
                       });
                       
                       videoView.setOnCompletionListener(mp -> {
                           videoView.setVisibility(View.GONE);
+                          splashPlaceholder.setVisibility(View.GONE);
                           webView.setVisibility(View.VISIBLE);
                       });
                       
                       videoView.setOnErrorListener((mp, what, extra) -> {
                           videoView.setVisibility(View.GONE);
+                          splashPlaceholder.setVisibility(View.GONE);
                           webView.setVisibility(View.VISIBLE);
                           return true;
                       });
-                      
-                      // Initial background color white to prevent black flash
-                      videoView.setBackgroundColor(Color.WHITE);
                   } else {
                       videoView.setVisibility(View.GONE);
+                      splashPlaceholder.setVisibility(View.GONE);
                       webView.setVisibility(View.VISIBLE);
                   }
               }
