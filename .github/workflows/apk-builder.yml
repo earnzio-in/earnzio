@@ -101,7 +101,6 @@ jobs:
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
-              <!-- Ad ID Permission for Unity Ads -->
               <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
               
               <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:requestLegacyExternalStorage="true" android:usesCleartextTraffic="true" android:hardwareAccelerated="true">
@@ -166,7 +165,7 @@ jobs:
           }
           EOF
 
-          # MAIN ACTIVITY LAYOUT (XML) - Added Banner Container
+          # MAIN ACTIVITY LAYOUT (XML)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -211,7 +210,7 @@ jobs:
           </FrameLayout>
           EOF
           
-          # MAIN ACTIVITY JAVA CODE (Merged with Unity Ads)
+          # MAIN ACTIVITY JAVA CODE 
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
@@ -251,6 +250,7 @@ jobs:
 
           // Unity Ads Imports
           import com.unity3d.ads.IUnityAdsInitializationListener;
+          import com.unity3d.ads.IUnityAdsLoadListener;
           import com.unity3d.ads.IUnityAdsShowListener;
           import com.unity3d.ads.UnityAds;
           import com.unity3d.services.banners.BannerErrorInfo;
@@ -270,7 +270,9 @@ jobs:
               private String unityGameID = "800382215";
               private String rewardedAdUnitId = "BP_Rewarded_Android";
               private String bannerAdUnitId = "BP_Banner_Android";
-              private boolean testMode = false;
+              
+              // 🔥 CHANGED TO TRUE TO ENABLE TEST ADS FOR QUICK CHECK 🔥
+              private boolean testMode = true; 
               
               private boolean isNetworkAvailable() {
                   ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -296,24 +298,17 @@ jobs:
                   }
               }
 
-              private void scheduleDailyNotification() {
-                  AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                  Intent intent = new Intent(this, AlarmReceiver.class);
-                  PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                  
-                  Calendar calendar = Calendar.getInstance();
-                  calendar.set(Calendar.HOUR_OF_DAY, 5);
-                  calendar.set(Calendar.MINUTE, 0);
-                  calendar.set(Calendar.SECOND, 0);
-                  
-                  if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
-                      calendar.add(Calendar.DAY_OF_YEAR, 1);
+              // Load Listener For Unity Ads to properly cache the video
+              private IUnityAdsLoadListener loadListener = new IUnityAdsLoadListener() {
+                  @Override
+                  public void onUnityAdsAdLoaded(String placementId) {
+                      // Ad is successfully loaded and ready
                   }
-                  
-                  if (alarmManager != null) {
-                      alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HOUR, pendingIntent);
+                  @Override
+                  public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
+                      // Failed to load
                   }
-              }
+              };
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
@@ -340,7 +335,6 @@ jobs:
                   bannerAdContainer = findViewById(R.id.bannerAdContainer);
                   
                   requestRequiredPermissions();
-                  scheduleDailyNotification(); 
                   
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
@@ -363,7 +357,8 @@ jobs:
                   UnityAds.initialize(getApplicationContext(), unityGameID, testMode, new IUnityAdsInitializationListener() {
                       @Override
                       public void onInitializationComplete() {
-                          UnityAds.load(rewardedAdUnitId);
+                          // FORCE LOAD WITH LISTENER
+                          UnityAds.load(rewardedAdUnitId, loadListener);
                           loadBannerAd();
                       }
                       @Override
@@ -473,8 +468,6 @@ jobs:
                       public void onBannerFailedToLoad(BannerView bannerAdView, BannerErrorInfo errorInfo) {}
                       @Override
                       public void onBannerLeftApplication(BannerView bannerAdView) {}
-                      
-                      // ఈ లైన్ మిస్ అవ్వడం వల్లే మనకు ఎర్రర్ వచ్చింది. దాన్ని ఇక్కడ యాడ్ చేశాను!
                       @Override
                       public void onBannerShown(BannerView bannerAdView) {}
                   });
@@ -514,11 +507,14 @@ jobs:
                               public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
                                   if (state.equals(UnityAds.UnityAdsShowCompletionState.COMPLETED)) {
                                       webView.evaluateJavascript("javascript:addRewardCoins();", null);
-                                      UnityAds.load(rewardedAdUnitId); 
+                                      // Load Next Ad
+                                      UnityAds.load(rewardedAdUnitId, loadListener); 
                                   }
                               }
                               @Override
                               public void onUnityAdsShowFailure(String placementId, UnityAds.UnityAdsShowError error, String message) {
+                                  // If it fails to show, force load it again for next time
+                                  UnityAds.load(rewardedAdUnitId, loadListener);
                                   Toast.makeText(mContext, "Ad not ready yet. Please try again.", Toast.LENGTH_SHORT).show();
                               }
                               @Override
