@@ -210,7 +210,7 @@ jobs:
           </FrameLayout>
           EOF
           
-          # MAIN ACTIVITY JAVA CODE 
+          # MAIN ACTIVITY JAVA CODE (WITH DEBUG TOASTS)
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
@@ -271,8 +271,7 @@ jobs:
               private String rewardedAdUnitId = "BP_Rewarded_Android";
               private String bannerAdUnitId = "BP_Banner_Android";
               
-              // 🔥 CHANGED TO TRUE TO ENABLE TEST ADS FOR QUICK CHECK 🔥
-              private boolean testMode = true; 
+              private boolean testMode = true; // TEST MODE ON
               
               private boolean isNetworkAvailable() {
                   ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -298,15 +297,15 @@ jobs:
                   }
               }
 
-              // Load Listener For Unity Ads to properly cache the video
+              // 🔥 DEBUG LOAD LISTENER 🔥
               private IUnityAdsLoadListener loadListener = new IUnityAdsLoadListener() {
                   @Override
                   public void onUnityAdsAdLoaded(String placementId) {
-                      // Ad is successfully loaded and ready
+                      runOnUiThread(() -> Toast.makeText(MainActivity.this, "🟢 AD LOADED & READY!", Toast.LENGTH_SHORT).show());
                   }
                   @Override
                   public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
-                      // Failed to load
+                      runOnUiThread(() -> Toast.makeText(MainActivity.this, "🔴 LOAD ERROR: " + message, Toast.LENGTH_LONG).show());
                   }
               };
 
@@ -353,16 +352,18 @@ jobs:
                   webAppInterface = new WebAppInterface(this);
                   webView.addJavascriptInterface(webAppInterface, "AndroidApp");
 
-                  // Initialize Unity Ads
+                  // 🔥 DEBUG INIT LISTENER 🔥
                   UnityAds.initialize(getApplicationContext(), unityGameID, testMode, new IUnityAdsInitializationListener() {
                       @Override
                       public void onInitializationComplete() {
-                          // FORCE LOAD WITH LISTENER
+                          runOnUiThread(() -> Toast.makeText(MainActivity.this, "🟢 UNITY INIT SUCCESS", Toast.LENGTH_SHORT).show());
                           UnityAds.load(rewardedAdUnitId, loadListener);
                           loadBannerAd();
                       }
                       @Override
-                      public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {}
+                      public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {
+                          runOnUiThread(() -> Toast.makeText(MainActivity.this, "🔴 INIT ERROR: " + message, Toast.LENGTH_LONG).show());
+                      }
                   });
 
                   webView.setWebViewClient(new WebViewClient() {
@@ -465,7 +466,9 @@ jobs:
                       @Override
                       public void onBannerClick(BannerView bannerAdView) {}
                       @Override
-                      public void onBannerFailedToLoad(BannerView bannerAdView, BannerErrorInfo errorInfo) {}
+                      public void onBannerFailedToLoad(BannerView bannerAdView, BannerErrorInfo errorInfo) {
+                          runOnUiThread(() -> Toast.makeText(MainActivity.this, "🔴 BANNER ERROR: " + errorInfo.errorMessage, Toast.LENGTH_LONG).show());
+                      }
                       @Override
                       public void onBannerLeftApplication(BannerView bannerAdView) {}
                       @Override
@@ -498,7 +501,6 @@ jobs:
                       ((Activity) mContext).runOnUiThread(() -> Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show());
                   }
 
-                  // 🔥 WATCH AD & REWARD LOGIC 🔥
                   @JavascriptInterface
                   public void showUnityAd() {
                       ((Activity) mContext).runOnUiThread(() -> {
@@ -507,13 +509,11 @@ jobs:
                               public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
                                   if (state.equals(UnityAds.UnityAdsShowCompletionState.COMPLETED)) {
                                       webView.evaluateJavascript("javascript:addRewardCoins();", null);
-                                      // Load Next Ad
                                       UnityAds.load(rewardedAdUnitId, loadListener); 
                                   }
                               }
                               @Override
                               public void onUnityAdsShowFailure(String placementId, UnityAds.UnityAdsShowError error, String message) {
-                                  // If it fails to show, force load it again for next time
                                   UnityAds.load(rewardedAdUnitId, loadListener);
                                   Toast.makeText(mContext, "Ad not ready yet. Please try again.", Toast.LENGTH_SHORT).show();
                               }
