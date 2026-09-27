@@ -39,7 +39,6 @@ jobs:
           }
           EOF
           
-          # Added AdMob Dependency here
           cat << 'EOF' > app/build.gradle
           plugins { id 'com.android.application' }
           android {
@@ -60,7 +59,8 @@ jobs:
           dependencies {
               implementation 'androidx.appcompat:appcompat:1.6.1'
               implementation 'androidx.core:core:1.9.0'
-              implementation 'com.google.android.gms:play-services-ads:23.0.0'
+              // Unity Ads Dependency
+              implementation 'com.unity3d.ads:unity-ads:4.12.2'
           }
           EOF
 
@@ -91,25 +91,20 @@ jobs:
           </resources>
           EOF
           
-          # MANIFEST (Added AdMob App ID & AdActivity)
+          # MANIFEST
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.READ_PHONE_STATE" /> 
-              <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
+              <!-- Ad ID Permission for Unity Ads -->
+              <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
               
               <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:requestLegacyExternalStorage="true" android:usesCleartextTraffic="true" android:hardwareAccelerated="true">
-                  
-                  <!-- Sample AdMob App ID (Replace with yours later) -->
-                  <meta-data
-                      android:name="com.google.android.gms.ads.APPLICATION_ID"
-                      android:value="ca-app-pub-3940256099942544~3347511713"/>
-
                   <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|keyboardHidden|screenSize">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -171,7 +166,7 @@ jobs:
           }
           EOF
 
-          # MAIN ACTIVITY LAYOUT (XML)
+          # MAIN ACTIVITY LAYOUT (XML) - Added Banner Container
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -205,10 +200,18 @@ jobs:
                   android:visibility="gone"
                   android:indeterminateTint="#10b981" />
 
+              <!-- Unity Banner Ad Container -->
+              <RelativeLayout
+                  android:id="@+id/bannerAdContainer"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="bottom"
+                  android:gravity="center" />
+
           </FrameLayout>
           EOF
           
-          # MAIN ACTIVITY JAVA CODE (WITH ADMOB LOGIC)
+          # MAIN ACTIVITY JAVA CODE (Merged with Unity Ads)
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
@@ -227,7 +230,6 @@ jobs:
           import android.os.Build;
           import android.os.Bundle;
           import android.provider.Settings;
-          import android.util.Log;
           import android.view.View;
           import android.view.Window;
           import android.view.WindowManager;
@@ -241,21 +243,19 @@ jobs:
           import android.webkit.WebViewClient;
           import android.widget.ImageView;
           import android.widget.ProgressBar;
+          import android.widget.RelativeLayout;
           import android.widget.Toast;
           import android.widget.VideoView;
-          import androidx.annotation.NonNull;
           import androidx.appcompat.app.AppCompatActivity;
-          
-          // AdMob Imports
-          import com.google.android.gms.ads.AdError;
-          import com.google.android.gms.ads.AdRequest;
-          import com.google.android.gms.ads.FullScreenContentCallback;
-          import com.google.android.gms.ads.LoadAdError;
-          import com.google.android.gms.ads.MobileAds;
-          import com.google.android.gms.ads.rewarded.RewardedAd;
-          import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
-
           import java.util.Calendar;
+
+          // Unity Ads Imports
+          import com.unity3d.ads.IUnityAdsInitializationListener;
+          import com.unity3d.ads.IUnityAdsShowListener;
+          import com.unity3d.ads.UnityAds;
+          import com.unity3d.services.banners.BannerErrorInfo;
+          import com.unity3d.services.banners.BannerView;
+          import com.unity3d.services.banners.UnityBannerSize;
 
           public class MainActivity extends AppCompatActivity {
               private WebAppInterface webAppInterface;
@@ -263,27 +263,15 @@ jobs:
               private VideoView videoView;
               private ImageView splashPlaceholder;
               private ProgressBar nativeSpinner;
-              
-              private RewardedAd rewardedAd;
-              private final String TAG = "MainActivity";
-              
-              // Sample Test Ad Unit ID (Replace with your Real AdMob Unit ID later)
-              private final String AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"; 
+              private RelativeLayout bannerAdContainer;
+              private BannerView bannerView;
 
-              private void loadRewardedAd() {
-                  AdRequest adRequest = new AdRequest.Builder().build();
-                  RewardedAd.load(this, AD_UNIT_ID, adRequest, new RewardedAdLoadCallback() {
-                      @Override
-                      public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                          rewardedAd = null;
-                      }
-                      @Override
-                      public void onAdLoaded(@NonNull RewardedAd ad) {
-                          rewardedAd = ad;
-                      }
-                  });
-              }
-
+              // Unity Ads Setup Variables
+              private String unityGameID = "800382215";
+              private String rewardedAdUnitId = "BP_Rewarded_Android";
+              private String bannerAdUnitId = "BP_Banner_Android";
+              private boolean testMode = false;
+              
               private boolean isNetworkAvailable() {
                   ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
                   if (cm != null) {
@@ -323,19 +311,12 @@ jobs:
                   }
                   
                   if (alarmManager != null) {
-                      alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+                      alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HOUR, pendingIntent);
                   }
               }
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  
-                  // Initialize AdMob
-                  MobileAds.initialize(this, initializationStatus -> {
-                      loadRewardedAd();
-                  });
-
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                       Window window = getWindow();
                       window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -349,12 +330,14 @@ jobs:
                       window.getDecorView().setSystemUiVisibility(flags);
                   }
 
+                  super.onCreate(savedInstanceState);
                   setContentView(R.layout.activity_main);
                   
                   webView = findViewById(R.id.webView);
                   videoView = findViewById(R.id.videoView);
                   splashPlaceholder = findViewById(R.id.splashPlaceholder);
                   nativeSpinner = findViewById(R.id.nativeSpinner);
+                  bannerAdContainer = findViewById(R.id.bannerAdContainer);
                   
                   requestRequiredPermissions();
                   scheduleDailyNotification(); 
@@ -376,6 +359,17 @@ jobs:
                   webAppInterface = new WebAppInterface(this);
                   webView.addJavascriptInterface(webAppInterface, "AndroidApp");
 
+                  // Initialize Unity Ads
+                  UnityAds.initialize(getApplicationContext(), unityGameID, testMode, new IUnityAdsInitializationListener() {
+                      @Override
+                      public void onInitializationComplete() {
+                          UnityAds.load(rewardedAdUnitId);
+                          loadBannerAd();
+                      }
+                      @Override
+                      public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {}
+                  });
+
                   webView.setWebViewClient(new WebViewClient() {
                       @Override
                       public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
@@ -386,7 +380,7 @@ jobs:
                       public void onPageFinished(WebView view, String url) {
                           super.onPageFinished(view, url);
                           String deviceId = webAppInterface.getDeviceId();
-                          String jsToInject = "javascript:(function(){ localStorage.setItem('deviceId', '" + deviceId + "'); window.isNativeApp = true; })();";
+                          String jsToInject = "javascript:(function(){ localStorage.setItem('deviceId', '" + deviceId + "'); })();";
                           view.evaluateJavascript(jsToInject, null);
                       }
 
@@ -421,7 +415,7 @@ jobs:
                   if (!isNetworkAvailable()) {
                       showOfflinePage(webView);
                   } else {
-                      webView.loadUrl("https://earnzio-org.blogspot.com/"); // Blogger URL
+                      webView.loadUrl("https://earnzio-org.blogspot.com/");
                   }
                   
                   int videoResId = getResources().getIdentifier("splash_video", "raw", getPackageName());
@@ -465,6 +459,24 @@ jobs:
                   }
               }
 
+              private void loadBannerAd() {
+                  bannerView = new BannerView(MainActivity.this, bannerAdUnitId, new UnityBannerSize(320, 50));
+                  bannerView.setListener(new BannerView.IListener() {
+                      @Override
+                      public void onBannerLoaded(BannerView bannerAdView) {
+                          bannerAdContainer.removeAllViews();
+                          bannerAdContainer.addView(bannerAdView);
+                      }
+                      @Override
+                      public void onBannerClick(BannerView bannerAdView) {}
+                      @Override
+                      public void onBannerFailedToLoad(BannerView bannerAdView, BannerErrorInfo errorInfo) {}
+                      @Override
+                      public void onBannerLeftApplication(BannerView bannerAdView) {}
+                  });
+                  bannerView.load();
+              }
+
               public class WebAppInterface {
                   Context mContext;
                   WebAppInterface(Context c) { mContext = c; }
@@ -489,34 +501,27 @@ jobs:
                       ((Activity) mContext).runOnUiThread(() -> Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show());
                   }
 
-                  // 🔥 THIS IS CALLED FROM BLOGGER WHEN "WATCH AD" IS CLICKED 🔥
+                  // 🔥 WATCH AD & REWARD LOGIC 🔥
                   @JavascriptInterface
-                  public void playAdMobVideo(String type) {
+                  public void showUnityAd() {
                       ((Activity) mContext).runOnUiThread(() -> {
-                          if (rewardedAd != null) {
-                              rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                                  @Override
-                                  public void onAdShowedFullScreenContent() { }
-                                  @Override
-                                  public void onAdFailedToShowFullScreenContent(AdError adError) {
-                                      rewardedAd = null;
+                          UnityAds.show((Activity) mContext, rewardedAdUnitId, new IUnityAdsShowListener() {
+                              @Override
+                              public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
+                                  if (state.equals(UnityAds.UnityAdsShowCompletionState.COMPLETED)) {
+                                      webView.evaluateJavascript("javascript:addRewardCoins();", null);
+                                      UnityAds.load(rewardedAdUnitId); 
                                   }
-                                  @Override
-                                  public void onAdDismissedFullScreenContent() {
-                                      rewardedAd = null;
-                                      loadRewardedAd(); // Load next ad
-                                  }
-                              });
-
-                              Activity activityContext = MainActivity.this;
-                              rewardedAd.show(activityContext, rewardItem -> {
-                                  // 🔥 AD COMPLETED! SEND SIGNAL BACK TO BLOGGER TO ADD COINS 🔥
-                                  webView.evaluateJavascript("javascript:nativeAdCompleted('" + type + "');", null);
-                              });
-                          } else {
-                              Toast.makeText(mContext, "Ad is still loading. Please try again in a few seconds.", Toast.LENGTH_SHORT).show();
-                              loadRewardedAd();
-                          }
+                              }
+                              @Override
+                              public void onUnityAdsShowFailure(String placementId, UnityAds.UnityAdsShowError error, String message) {
+                                  Toast.makeText(mContext, "Ad not ready yet. Please try again.", Toast.LENGTH_SHORT).show();
+                              }
+                              @Override
+                              public void onUnityAdsShowStart(String placementId) {}
+                              @Override
+                              public void onUnityAdsShowClick(String placementId) {}
+                          });
                       });
                   }
               }
