@@ -473,6 +473,10 @@ jobs:
                       public void onBannerFailedToLoad(BannerView bannerAdView, BannerErrorInfo errorInfo) {}
                       @Override
                       public void onBannerLeftApplication(BannerView bannerAdView) {}
+                      
+                      // ఈ లైన్ మిస్ అవ్వడం వల్లే మనకు ఎర్రర్ వచ్చింది. దాన్ని ఇక్కడ యాడ్ చేశాను!
+                      @Override
+                      public void onBannerShown(BannerView bannerAdView) {}
                   });
                   bannerView.load();
               }
