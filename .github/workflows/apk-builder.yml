@@ -59,7 +59,6 @@ jobs:
           dependencies {
               implementation 'androidx.appcompat:appcompat:1.6.1'
               implementation 'androidx.core:core:1.9.0'
-              implementation 'com.unity3d.ads:unity-ads:4.12.0'
           }
           EOF
 
@@ -90,31 +89,18 @@ jobs:
           </resources>
           EOF
           
-          # MANIFEST 
+          # MANIFEST
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-              <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
               <uses-permission android:name="android.permission.READ_PHONE_STATE" /> 
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
-              <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
               
-              <application 
-                  android:label="Earnzio" 
-                  android:icon="@drawable/app_icon" 
-                  android:theme="@style/Theme.App" 
-                  android:requestLegacyExternalStorage="true" 
-                  android:usesCleartextTraffic="true" 
-                  android:hardwareAccelerated="true"
-                  tools:targetApi="31">
-                  
-                  <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>
-
+              <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:requestLegacyExternalStorage="true" android:usesCleartextTraffic="true" android:hardwareAccelerated="true">
                   <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|keyboardHidden|screenSize">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -202,26 +188,10 @@ jobs:
                   android:layout_height="match_parent"
                   android:background="#ffffff" />
 
-              <ProgressBar
-                  android:id="@+id/nativeSpinner"
-                  android:layout_width="50dp"
-                  android:layout_height="50dp"
-                  android:layout_gravity="center"
-                  android:visibility="gone"
-                  android:indeterminateTint="#10b981" />
-
-              <!-- Unity Banner Ad Container -->
-              <RelativeLayout
-                  android:id="@+id/bannerAdContainer"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:layout_gravity="bottom"
-                  android:gravity="center" />
-
           </FrameLayout>
           EOF
           
-          # MAIN ACTIVITY JAVA CODE (PRODUCTION READY - NO TOASTS, AUTO RETRY)
+          # MAIN ACTIVITY JAVA CODE - Updated URL Override Logic for Ads
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
@@ -252,38 +222,16 @@ jobs:
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
           import android.widget.ImageView;
-          import android.widget.ProgressBar;
-          import android.widget.RelativeLayout;
           import android.widget.Toast;
           import android.widget.VideoView;
           import androidx.appcompat.app.AppCompatActivity;
           import java.util.Calendar;
-
-          // Unity Ads Imports
-          import com.unity3d.ads.IUnityAdsInitializationListener;
-          import com.unity3d.ads.IUnityAdsLoadListener;
-          import com.unity3d.ads.IUnityAdsShowListener;
-          import com.unity3d.ads.UnityAds;
-          import com.unity3d.services.banners.BannerErrorInfo;
-          import com.unity3d.services.banners.BannerView;
-          import com.unity3d.services.banners.UnityBannerSize;
 
           public class MainActivity extends AppCompatActivity {
               private WebAppInterface webAppInterface;
               private WebView webView;
               private VideoView videoView;
               private ImageView splashPlaceholder;
-              private ProgressBar nativeSpinner;
-              private RelativeLayout bannerAdContainer;
-              private BannerView bannerView;
-
-              // Unity Ads Setup Variables
-              private String unityGameID = "800382215";
-              private String rewardedAdUnitId = "BP_Rewarded_Android";
-              private String bannerAdUnitId = "BP_Banner_Android";
-              
-              // 🔥 TEST MODE OFF - REAL ADS ONLY 🔥
-              private boolean testMode = false; 
               
               private boolean isNetworkAvailable() {
                   ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -309,22 +257,24 @@ jobs:
                   }
               }
 
-              // 🔥 SILENT AUTO-RETRY LOAD LISTENER (NO TOASTS) 🔥
-              private IUnityAdsLoadListener loadListener = new IUnityAdsLoadListener() {
-                  @Override
-                  public void onUnityAdsAdLoaded(String placementId) {
-                      // Ad is successfully cached in background
+              private void scheduleDailyNotification() {
+                  AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                  Intent intent = new Intent(this, AlarmReceiver.class);
+                  PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  
+                  Calendar calendar = Calendar.getInstance();
+                  calendar.set(Calendar.HOUR_OF_DAY, 5);
+                  calendar.set(Calendar.MINUTE, 0);
+                  calendar.set(Calendar.SECOND, 0);
+                  
+                  if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+                      calendar.add(Calendar.DAY_OF_YEAR, 1);
                   }
-                  @Override
-                  public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
-                      // If ad fails to load (No Fill), wait 15 seconds and silently try again
-                      webView.postDelayed(() -> {
-                          if (UnityAds.isInitialized()) {
-                              UnityAds.load(placementId, MainActivity.this.loadListener);
-                          }
-                      }, 15000);
+                  
+                  if (alarmManager != null) {
+                      alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HOUR, pendingIntent);
                   }
-              };
+              }
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
@@ -347,27 +297,9 @@ jobs:
                   webView = findViewById(R.id.webView);
                   videoView = findViewById(R.id.videoView);
                   splashPlaceholder = findViewById(R.id.splashPlaceholder);
-                  nativeSpinner = findViewById(R.id.nativeSpinner);
-                  bannerAdContainer = findViewById(R.id.bannerAdContainer);
                   
                   requestRequiredPermissions();
-                  
-                  webView.postDelayed(() -> {
-                      if (isNetworkAvailable()) {
-                          UnityAds.initialize(getApplicationContext(), unityGameID, testMode, new IUnityAdsInitializationListener() {
-                              @Override
-                              public void onInitializationComplete() {
-                                  // Starts loading the ad silently
-                                  UnityAds.load(rewardedAdUnitId, loadListener);
-                                  loadBannerAd();
-                              }
-                              @Override
-                              public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {
-                                  // Initialization failed, will try again on next app open
-                              }
-                          });
-                      }
-                  }, 3000);
+                  scheduleDailyNotification(); 
                   
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
@@ -404,6 +336,7 @@ jobs:
                       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                           String url = request.getUrl().toString();
                           
+                          // WhatsApp Intent
                           if (url.startsWith("https://api.whatsapp.com/") || url.startsWith("https://wa.me/") || url.startsWith("whatsapp://")) {
                               try {
                                   Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -421,7 +354,23 @@ jobs:
                                   }
                               }
                           }
-                          if (url.startsWith("http://") || url.startsWith("https://")) { return false; }
+                          
+                          // Mee site WebView lopalane open avvali
+                          if (url.contains("earnzio-org.blogspot.com")) {
+                              return false;
+                          }
+                          
+                          // Ads leda inka ye external link click chesina Chrome/Browser lo open avuthundi
+                          if (url.startsWith("http://") || url.startsWith("https://")) {
+                              try {
+                                  Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                                  startActivity(browserIntent);
+                                  return true;
+                              } catch (Exception e) {
+                                  return false;
+                              }
+                          }
+                          
                           return true;
                       }
                   });
@@ -459,7 +408,6 @@ jobs:
                           videoView.setVisibility(View.GONE);
                           splashPlaceholder.setVisibility(View.GONE);
                           webView.setVisibility(View.VISIBLE);
-                          nativeSpinner.setVisibility(View.VISIBLE); 
                       });
                       
                       videoView.setOnErrorListener((mp, what, extra) -> {
@@ -475,29 +423,6 @@ jobs:
                   }
               }
 
-              private void loadBannerAd() {
-                  bannerView = new BannerView(MainActivity.this, bannerAdUnitId, new UnityBannerSize(320, 50));
-                  bannerView.setListener(new BannerView.IListener() {
-                      @Override
-                      public void onBannerLoaded(BannerView bannerAdView) {
-                          bannerAdContainer.removeAllViews();
-                          bannerAdContainer.addView(bannerAdView);
-                      }
-                      @Override
-                      public void onBannerClick(BannerView bannerAdView) {}
-                      @Override
-                      public void onBannerFailedToLoad(BannerView bannerAdView, BannerErrorInfo errorInfo) {
-                          // Silent retry for banner
-                          webView.postDelayed(() -> loadBannerAd(), 15000);
-                      }
-                      @Override
-                      public void onBannerLeftApplication(BannerView bannerAdView) {}
-                      @Override
-                      public void onBannerShown(BannerView bannerAdView) {}
-                  });
-                  bannerView.load();
-              }
-
               public class WebAppInterface {
                   Context mContext;
                   WebAppInterface(Context c) { mContext = c; }
@@ -509,53 +434,11 @@ jobs:
                   }
 
                   @JavascriptInterface
-                  public void appReadyToDisplay() {
-                      ((Activity) mContext).runOnUiThread(() -> {
-                          if(nativeSpinner != null) {
-                              nativeSpinner.setVisibility(View.GONE);
-                          }
-                      });
-                  }
+                  public void appReadyToDisplay() {}
 
                   @JavascriptInterface
                   public void showToast(String message) {
                       ((Activity) mContext).runOnUiThread(() -> Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show());
-                  }
-
-                  @JavascriptInterface
-                  public void showUnityAd() {
-                      ((Activity) mContext).runOnUiThread(() -> {
-                          if (UnityAds.isInitialized()) {
-                              UnityAds.show((Activity) mContext, rewardedAdUnitId, new IUnityAdsShowListener() {
-                                  @Override
-                                  public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
-                                      if (state.equals(UnityAds.UnityAdsShowCompletionState.COMPLETED)) {
-                                          webView.evaluateJavascript("javascript:addRewardCoins();", null);
-                                          UnityAds.load(rewardedAdUnitId, loadListener); 
-                                      }
-                                  }
-                                  @Override
-                                  public void onUnityAdsShowFailure(String placementId, UnityAds.UnityAdsShowError error, String message) {
-                                      UnityAds.load(rewardedAdUnitId, loadListener);
-                                      Toast.makeText(mContext, "Ad is loading in background. Please wait a moment and try again.", Toast.LENGTH_SHORT).show();
-                                  }
-                                  @Override
-                                  public void onUnityAdsShowStart(String placementId) {}
-                                  @Override
-                                  public void onUnityAdsShowClick(String placementId) {}
-                              });
-                          } else {
-                              Toast.makeText(mContext, "Connecting to Ad Server. Please wait...", Toast.LENGTH_SHORT).show();
-                              UnityAds.initialize(getApplicationContext(), unityGameID, testMode, new IUnityAdsInitializationListener() {
-                                  @Override
-                                  public void onInitializationComplete() {
-                                      UnityAds.load(rewardedAdUnitId, loadListener);
-                                  }
-                                  @Override
-                                  public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {}
-                              });
-                          }
-                      });
                   }
               }
           }
