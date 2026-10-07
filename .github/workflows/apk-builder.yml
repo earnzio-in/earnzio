@@ -1,4 +1,4 @@
-name: Build Earnzio Final Fixed APK
+name: Build Earnzio Pro Developer APK
 
 on:
   workflow_dispatch: 
@@ -67,7 +67,7 @@ jobs:
           wget -O app/src/main/res/raw/splash_video.mp4 "https://res.cloudinary.com/ixxjuj5g/video/upload/v1790382792/InShot_20260926_054447616.mp4"
 
           # ==========================================
-          # 100% OFFLINE HTML + CSS + FIREBASE JS 
+          # 100% OFFLINE HTML + CSS + FIREBASE JS (PRO VERSION)
           # ==========================================
           cat << 'EOF' > app/src/main/assets/index.html
           <!DOCTYPE html>
@@ -75,7 +75,7 @@ jobs:
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-            <title>Earnzio App</title>
+            <title>Earnzio Pro</title>
             <style>
               @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
               
@@ -86,6 +86,14 @@ jobs:
                 background-attachment: fixed; color: #000; user-select: none; -webkit-user-select: none;
               }
               
+              /* 🔴 CUSTOM PRO ALERT MODAL 🔴 */
+              #customAlert { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+              .alert-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: scaleUp 0.3s ease; border: 2px solid #bae6fd; }
+              @keyframes scaleUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+              .alert-title { font-size: 22px; font-weight: 900; margin-bottom: 10px; color: #0369a1; }
+              .alert-msg { font-size: 16px; color: #333; margin-bottom: 20px; line-height: 1.5; font-weight: bold; }
+              .alert-btn { background: #0284c7; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 900; font-size: 18px; cursor: pointer; width: 100%; box-shadow: 0 4px 6px rgba(2,132,199,0.3); }
+
               /* LOADING SPINNER */
               #globalSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
               .spinner { width: 50px; height: 50px; border: 5px solid #bae6fd; border-top-color: #0284c7; border-radius: 50%; animation: spin 1s linear infinite; }
@@ -98,12 +106,12 @@ jobs:
               .auth-title { font-size: 32px; font-weight: 900; color: #0369a1; margin-bottom: 10px; text-transform: uppercase; }
               
               .input-wrapper { position: relative; width: 100%; }
-              .auth-input { width: 100%; padding: 18px; border: 2px solid #7dd3fc; border-radius: 10px; font-size: 16px; outline: none; box-sizing: border-box; background: rgba(255,255,255,0.8); font-weight: bold; }
+              .auth-input { width: 100%; padding: 18px; border: 2px solid #7dd3fc; border-radius: 10px; font-size: 16px; outline: none; box-sizing: border-box; background: rgba(255,255,255,0.8); font-weight: bold; color: #000; }
               .auth-input:focus { border-color: #0284c7; background: white; }
-              .eye-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: #0369a1; }
+              .eye-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; }
 
               .auth-btn { background: #0284c7; color: white; width: 100%; padding: 18px; border: none; border-radius: 10px; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(2,132,199,0.3); transition: 0.2s; }
-              .auth-switch { color: #0369a1; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; }
+              .auth-switch { color: #0369a1; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; text-decoration: underline; }
 
               /* MAIN APP */
               #main-app { display: none; padding-bottom: 80px; }
@@ -122,16 +130,16 @@ jobs:
               .task-title { font-size: 22px; font-weight: 900; margin: 15px 0 10px 0; color: #0369a1; }
               .start-btn { background: #f0f9ff; border: 2px solid #38bdf8; padding: 10px 30px; border-radius: 8px; font-size: 20px; font-weight: 900; color: #0284c7; cursor: pointer; }
 
-              /* CAPTCHA & QUIZ */
+              /* CAPTCHA */
               .submit-btn { background: #059669; color: white; width: 100%; padding: 15px; border-radius: 8px; font-size: 20px; font-weight: 900; border: none; cursor: pointer; margin-bottom:10px; }
               .captcha-box { background: #f0f9ff; padding: 30px 20px; text-align: center; font-size: 28px; font-family: 'Courier New', monospace; font-weight: 900; letter-spacing: 8px; border: 2px dashed #0284c7; margin: 20px 0; border-radius: 8px; color:#0369a1;}
               .captcha-input { width: 100%; padding: 15px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline:none; }
               
-              /* YOUTUBE WATCH TAB - FIXED ERROR 153/152 */
+              /* 🔴 YOUTUBE WATCH TAB (PRO DESIGN) 🔴 */
               .yt-search-container { display: flex; gap: 10px; margin-bottom: 15px; }
-              .yt-search-input { flex: 1; padding: 12px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; }
+              .yt-search-input { flex: 1; padding: 12px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; background: white; }
               .yt-search-btn { background: #ef4444; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 900; font-size: 16px; cursor: pointer; }
-              .yt-result-container { width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+              .yt-result-container { width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid #bae6fd; background: #000; }
               .yt-frame { width: 100%; height: 60vh; border: none; background: #000; }
 
               /* PROFILE TAB */
@@ -173,8 +181,7 @@ jobs:
                 projectId: "earnzio-in",
                 storageBucket: "earnzio-in.firebasestorage.app",
                 messagingSenderId: "935935737332",
-                appId: "1:935935737332:web:70bc35401fb05995274da1",
-                measurementId: "G-BGW0EW7312"
+                appId: "1:935935737332:web:70bc35401fb05995274da1"
               };
 
               const app = initializeApp(firebaseConfig);
@@ -183,9 +190,16 @@ jobs:
 
               let currentUser = null;
               let currentCoins = 0;
+              let forceLogoutForRegister = false; // Flag to stop auto-login
 
               onAuthStateChanged(auth, (user) => {
                 if (user) {
+                  if (forceLogoutForRegister) {
+                      // Pro Flow: If just registered, force them out to show success message and login manually
+                      signOut(auth);
+                      forceLogoutForRegister = false;
+                      return;
+                  }
                   currentUser = user;
                   document.getElementById('globalSpinner').style.display = 'none';
                   document.getElementById('auth-screen').style.display = 'none';
@@ -199,15 +213,25 @@ jobs:
                 }
               });
 
+              // PRO DEVELOPER ALERT FUNCTION
+              window.showAlert = function(title, msg, callback) {
+                  document.getElementById('alertTitle').innerText = title;
+                  document.getElementById('alertMsg').innerHTML = msg;
+                  document.getElementById('customAlert').style.display = 'flex';
+                  document.getElementById('alertBtn').onclick = function() {
+                      document.getElementById('customAlert').style.display = 'none';
+                      if(callback) callback();
+                  };
+              };
+
               window.doAuth = function(type) {
                 const name = document.getElementById('authName').value.trim();
                 const mobile = document.getElementById('authMobile').value.trim();
                 const pass = document.getElementById('authPass').value.trim();
                 
-                if(!mobile || !pass) { alert("Mobile & Password are required!"); return; }
-                if(type === 'register' && !name) { alert("Please enter your name!"); return; }
+                if(!mobile || !pass) { showAlert("Error", "Mobile Number & Password are required!"); return; }
+                if(type === 'register' && !name) { showAlert("Error", "Please enter your Full Name!"); return; }
                 
-                // Show Spinner
                 document.getElementById('globalSpinner').style.display = 'flex';
                 document.getElementById('spinnerText').innerText = type === 'login' ? 'Authenticating...' : 'Creating Account...';
 
@@ -216,44 +240,46 @@ jobs:
                 if(type === 'login') {
                   signInWithEmailAndPassword(auth, dummyEmail, pass).catch((e) => {
                     document.getElementById('globalSpinner').style.display = 'none';
+                    // 🔥 Professional Error Handling 🔥
                     if(e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
-                        alert("User not found! Please register first.");
+                        showAlert("Login Failed", "User not found! Please register an account first.");
                     } else if (e.code === 'auth/wrong-password') {
-                        alert("Incorrect Password! Try again.");
+                        showAlert("Incorrect Details", "You entered a wrong password! Please check and try again.");
                     } else {
-                        alert("Login Failed. Check Mobile number & Password.");
+                        showAlert("Error", "Login Failed. Check your Mobile number & Password.");
                     }
                   });
                 } else {
+                  forceLogoutForRegister = true; // Prevents auto-login
                   createUserWithEmailAndPassword(auth, dummyEmail, pass)
                     .then((cred) => {
-                      // Generate Unique Random ID (ER + 6 digits)
                       const randomId = "ER" + Math.floor(100000 + Math.random() * 900000);
                       
                       set(ref(db, 'users/' + cred.user.uid), { 
-                        name: name,
-                        mobile: mobile,
-                        password: pass, 
-                        uniqueId: randomId,
-                        coins: 12.5, 
-                        lastClaimDate: "" 
-                      });
-                      
-                      setTimeout(() => {
+                        name: name, mobile: mobile, password: pass, uniqueId: randomId, coins: 12.5, lastClaimDate: "" 
+                      }).then(() => {
                           document.getElementById('globalSpinner').style.display = 'none';
-                          alert("✅ Registration Successful!\nYour Unique ID is: " + randomId + "\n12.5 Coins Added.");
                           
-                          // SWITCH TO LOGIN AFTER SUCCESSFUL REGISTRATION
-                          signOut(auth).then(() => {
+                          // Pro Success Modal & Switch to Login
+                          let successMsg = "Your account is successfully created!<br><br>";
+                          successMsg += "<b style='color:#0369a1;'>Your ID:</b> " + randomId + "<br>";
+                          successMsg += "<b style='color:#0369a1;'>Password:</b> " + pass + "<br><br>";
+                          successMsg += "Please Login to continue.";
+                          
+                          showAlert("✅ Registration Successful!", successMsg, () => {
                               document.getElementById('authName').value = "";
                               document.getElementById('authPass').value = "";
                               if(!isLogin) toggleAuthMode(); 
                           });
-                      }, 1000);
-                      
+                      });
                     }).catch((e) => {
+                      forceLogoutForRegister = false;
                       document.getElementById('globalSpinner').style.display = 'none';
-                      alert("Registration Error: Mobile number might already exist.");
+                      if(e.code === 'auth/email-already-in-use') {
+                          showAlert("Error", "This Mobile Number is already registered! Please go to Login.");
+                      } else {
+                          showAlert("Error", e.message);
+                      }
                     });
                 }
               };
@@ -291,18 +317,27 @@ jobs:
                 const today = new Date().toISOString().split('T')[0];
                 get(ref(db, 'users/' + currentUser.uid + '/lastClaimDate')).then((snap) => {
                   if(snap.exists() && snap.val() === today) {
-                    alert("You have already claimed today's bonus!");
+                    showAlert("Notice", "You have already claimed today's bonus! Come back tomorrow.");
                   } else {
                     currentCoins += 5.0;
                     update(ref(db, 'users/' + currentUser.uid), { coins: currentCoins, lastClaimDate: today });
                     updateUI();
-                    alert("Daily Bonus Claimed! +5 Coins");
+                    showAlert("Success!", "Daily Bonus Claimed! +5 Coins added to your wallet.");
                   }
                 });
               };
             </script>
           </head>
           <body>
+
+            <!-- PRO CUSTOM ALERT MODAL -->
+            <div id="customAlert">
+              <div class="alert-box">
+                <div class="alert-title" id="alertTitle">Alert</div>
+                <div class="alert-msg" id="alertMsg">Message goes here</div>
+                <button class="alert-btn" id="alertBtn">OK</button>
+              </div>
+            </div>
 
             <!-- GLOBAL SPINNER -->
             <div id="globalSpinner">
@@ -362,7 +397,8 @@ jobs:
                   <button class="yt-search-btn" onclick="searchYoutube()">Search</button>
                 </div>
                 <div class="yt-result-container">
-                  <iframe id="ytPlayer" class="yt-frame" src="https://www.youtube.com/embed?listType=user_uploads&list=telugu" allowfullscreen></iframe>
+                  <!-- Note: Origin is set dynamically in Android to fix errors -->
+                  <iframe id="ytPlayer" class="yt-frame" src="https://www.youtube.com/embed?listType=search&list=telugu+latest+movies" allowfullscreen></iframe>
                 </div>
               </div>
 
@@ -389,7 +425,7 @@ jobs:
                   </div>
                   <div id="w-form-upi" style="display:none;"><input type="text" class="w-input" placeholder="ENTER UPI ID"></div>
                   <input type="number" class="w-input" placeholder="Amount" style="border-color:#0284c7;">
-                  <button class="submit-btn" onclick="alert('Withdrawal Request Submitted!')">SUBMIT</button>
+                  <button class="submit-btn" onclick="showAlert('Success', 'Withdrawal Request Submitted!')">SUBMIT</button>
                 </div>
 
                 <div class="menu-item" onclick="toggleSection('txSec')">📜 TRANSACTIONS <span>▼</span></div>
@@ -427,7 +463,7 @@ jobs:
                 document.getElementById('authName').style.display = isLogin ? "none" : "block";
               }
 
-              // Eye Icon logic
+              // 👁️ EYE ICON FOR PASSWORD
               function togglePassword() {
                 const passInput = document.getElementById('authPass');
                 if (passInput.type === "password") {
@@ -474,8 +510,8 @@ jobs:
               function searchYoutube() {
                 const query = document.getElementById('ytSearchBox').value.trim();
                 if(!query) return;
-                // Using YouTube Search Result Player embed URL
-                const embedUrl = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(query) + "&autoplay=1";
+                // Add origin to fix restriction errors
+                const embedUrl = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(query) + "&origin=https://earnzio.com";
                 document.getElementById('ytPlayer').src = embedUrl;
               }
 
@@ -490,8 +526,8 @@ jobs:
               function openCaptcha() { nav('captcha'); genCap(); }
               function submitCaptcha() {
                 if(document.getElementById('capInput').value.trim().toUpperCase() === curCap) {
-                  addCoins(1.5); alert("Correct! +1.5 Coins Added"); nav('home');
-                } else { alert("Wrong Captcha! Try again."); genCap(); }
+                  addCoins(1.5); showAlert("Success", "Correct! +1.5 Coins Added"); nav('home');
+                } else { showAlert("Error", "Wrong Captcha! Try again."); genCap(); }
               }
             </script>
           </body>
@@ -557,7 +593,7 @@ jobs:
           </manifest>
           EOF
 
-          # MAIN ACTIVITY (YOUTUBE ERROR 153/152 BASE URL FIX)
+          # MAIN ACTIVITY (YOUTUBE ERROR 153/152 BASE URL FIX PRO)
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
@@ -616,14 +652,14 @@ jobs:
                   
                   webView.setWebViewClient(new WebViewClient());
 
-                  // 🔴 YOUTUBE EMBED FIX 🔴
+                  // 🔴 PRO YOUTUBE EMBED FIX 🔴
                   try {
                       InputStream is = getAssets().open("index.html");
                       Scanner s = new Scanner(is).useDelimiter("\\A");
                       String html = s.hasNext() ? s.next() : "";
                       
-                      // Using Google's Base URL tricks YouTube into allowing playback in WebView
-                      webView.loadDataWithBaseURL("https://www.google.com", html, "text/html", "UTF-8", null);
+                      // Using custom domain as BaseURL fully bypasses YouTube Error 152/153 in WebView
+                      webView.loadDataWithBaseURL("https://earnzio.com", html, "text/html", "UTF-8", null);
                   } catch (Exception e) {
                       e.printStackTrace();
                   }
@@ -631,11 +667,11 @@ jobs:
           }
           EOF
 
-      - name: Build Final Fixed APK
+      - name: Build Pro Developer APK
         run: gradle :app:assembleDebug
 
       - name: Upload Super Final APK
         uses: actions/upload-artifact@v4
         with:
-          name: EARNZIO-SUPER-FINAL-APK
+          name: EARNZIO-PRO-DEV-APK
           path: app/build/outputs/apk/debug/app-debug.apk
