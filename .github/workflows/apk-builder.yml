@@ -1,4 +1,4 @@
-name: Build Earnzio Firebase Ultimate APK
+name: Build Earnzio Final APK
 
 on:
   workflow_dispatch: 
@@ -75,7 +75,7 @@ jobs:
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-            <title>Earnzio Firebase</title>
+            <title>Earnzio App</title>
             <style>
               @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
               
@@ -86,18 +86,19 @@ jobs:
                 background-attachment: fixed; color: #000; user-select: none; -webkit-user-select: none;
               }
               
-              /* LOGIN & REGISTER SCREEN */
-              #auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; box-sizing: border-box; }
-              .auth-box { background: rgba(255,255,255,0.9); width: 100%; max-width: 400px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border: 2px solid #bae6fd; }
-              .auth-title { font-size: 28px; font-weight: 900; color: #0369a1; margin-bottom: 20px; }
-              .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
-              .auth-input:focus { border-color: #0284c7; }
-              .auth-btn { background: #0284c7; color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-              .auth-switch { color: #0369a1; font-weight: bold; cursor: pointer; font-size: 14px; text-decoration: underline; margin-top:10px; }
-              #authLoading { display: none; color: #0369a1; font-weight: bold; margin-bottom: 10px; }
+              /* LOGIN & REGISTER SCREEN (No Card Box, Clean UI) */
+              #auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 30px; box-sizing: border-box; }
+              .auth-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; text-align: center; }
+              .auth-title { font-size: 32px; font-weight: 900; color: #0369a1; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+              .auth-input { width: 100%; padding: 18px; border: 2px solid #7dd3fc; border-radius: 10px; font-size: 16px; outline: none; box-sizing: border-box; background: rgba(255,255,255,0.8); font-weight: bold; }
+              .auth-input:focus { border-color: #0284c7; background: white; }
+              .auth-btn { background: #0284c7; color: white; width: 100%; padding: 18px; border: none; border-radius: 10px; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(2,132,199,0.3); transition: 0.2s; }
+              .auth-btn:active { transform: scale(0.98); }
+              .auth-switch { color: #0369a1; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; }
+              #authLoading { display: none; color: #0369a1; font-weight: bold; margin-bottom: 5px; }
 
-              /* MAIN APP CONTAINER */
-              #main-app { display: none; padding-bottom: 70px; }
+              /* MAIN APP */
+              #main-app { display: none; padding-bottom: 80px; }
               
               .top-bar { display: flex; justify-content: flex-end; padding: 15px; }
               .coin-box { background: white; padding: 8px 15px; border-radius: 8px; border: 2px solid #bae6fd; font-weight: 900; font-size: 20px; color: #059669; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -111,29 +112,24 @@ jobs:
               .days-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
               .day-box { background: #f0f9ff; border: 2px solid #7dd3fc; border-radius: 8px; width: 12%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; color:#0369a1; }
               .day-box.claimed { background: #059669; color: white; border-color: #059669; }
-              .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+              .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 20px; font-weight: 900; cursor: pointer; }
               
-              .task-card { background: white; border: 2px solid #bae6fd; border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+              .task-card { background: white; border: 2px solid #bae6fd; border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
               .task-title { font-size: 22px; font-weight: 900; margin: 15px 0 10px 0; color: #0369a1; }
               .start-btn { background: #f0f9ff; border: 2px solid #38bdf8; padding: 10px 30px; border-radius: 8px; font-size: 20px; font-weight: 900; color: #0284c7; cursor: pointer; }
 
               /* CAPTCHA & QUIZ */
-              .submit-btn { background: #059669; color: white; width: 100%; padding: 15px; border-radius: 8px; font-size: 20px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom:10px; }
+              .submit-btn { background: #059669; color: white; width: 100%; padding: 15px; border-radius: 8px; font-size: 20px; font-weight: 900; border: none; cursor: pointer; margin-bottom:10px; }
               .captcha-box { background: #f0f9ff; padding: 30px 20px; text-align: center; font-size: 28px; font-family: 'Courier New', monospace; font-weight: 900; letter-spacing: 8px; border: 2px dashed #0284c7; margin: 20px 0; border-radius: 8px; color:#0369a1;}
               .captcha-input { width: 100%; padding: 15px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline:none; }
               
-              .quiz-q { background: white; padding: 20px; border-radius: 8px; font-size: 18px; font-weight: 900; margin: 20px 0; border: 2px solid #bae6fd; color:#0369a1; }
-              .quiz-opt { background: #f0f9ff; padding: 15px; border: 2px solid #bae6fd; border-radius: 8px; margin-bottom: 10px; font-weight: bold; display: flex; gap: 15px; cursor: pointer; font-size: 16px; align-items: center; color:#0c4a6e; }
-              .opt-let { font-weight: 900; background: white; border: 2px solid #7dd3fc; padding: 5px 12px; border-radius: 5px; }
-              .quiz-opt.correct { background: #059669; color: white; border-color: #059669; }
-              .quiz-opt.wrong { background: #ef4444; color: white; border-color: #ef4444; }
-              .quiz-exp { background: #059669; color: white; padding: 15px; border-radius: 8px; font-weight: bold; display: none; margin-top: 15px; font-size: 16px; text-align:center; }
+              /* YOUTUBE WATCH TAB (Search & Player) */
+              .yt-search-container { display: flex; gap: 10px; margin-bottom: 15px; }
+              .yt-search-input { flex: 1; padding: 12px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; }
+              .yt-search-btn { background: #ef4444; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 900; font-size: 16px; cursor: pointer; }
+              .yt-frame { width: 100%; height: 60vh; border: none; border-radius: 12px; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-              /* YOUTUBE WATCH TAB */
-              #tab-watch { padding: 0 !important; height: calc(100vh - 65px); background: #000; }
-              .yt-frame { width: 100%; height: 100%; border: none; }
-
-              /* PROFILE TAB */
+              /* PROFILE TAB & INLINE WITHDRAWAL */
               .pro-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
               .pro-name { background: white; padding: 10px; border: 2px solid #bae6fd; border-radius: 8px; font-weight: bold; font-size: 16px; flex-grow: 1; text-align: center; margin: 0 10px; color:#0369a1;}
               .id-box { background: #0284c7; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold; margin-bottom: 15px; text-align: center; }
@@ -141,7 +137,6 @@ jobs:
               
               .menu-item { background: white; padding: 15px 20px; border: 2px solid #bae6fd; border-radius: 8px; margin-bottom: 10px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; cursor: pointer; color:#0369a1; }
               
-              /* INLINE EXPANDABLE SECTIONS */
               .inline-section { display: none; background: rgba(255,255,255,0.9); padding: 15px; border: 2px dashed #38bdf8; border-radius: 8px; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
               .w-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
               .w-tab { flex: 1; background: white; text-align: center; padding: 10px; border: 2px solid #bae6fd; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; color:#0369a1;}
@@ -152,10 +147,11 @@ jobs:
               .tx-suc { border-left: 5px solid #059669; }
               .tx-pen { border-left: 5px solid #f59e0b; }
 
-              /* BOTTOM NAV */
-              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 8px 0; border-top: 2px solid #bae6fd; z-index: 1000; }
-              .nav-icon { width: 50px; height: 50px; background: #f0f9ff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; border: 2px solid #bae6fd; transition: 0.3s; }
-              .nav-icon.active { background: #0284c7; color: white; border-color: #0369a1; transform: scale(1.1); }
+              /* BOTTOM NAV (Black Icons, No Background) */
+              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #ddd; z-index: 1000; backdrop-filter: blur(5px); }
+              .nav-icon { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; background: transparent; border: none; color: #333; }
+              .nav-icon svg { width: 28px; height: 28px; fill: currentColor; }
+              .nav-icon.active { color: #0284c7; transform: scale(1.15); }
             </style>
             
             <!-- 🔥 FIREBASE SDK SETUP 🔥 -->
@@ -164,7 +160,7 @@ jobs:
               import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
               import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-              // 🔴 MEE FIREBASE CONFIG DETAILS 🔴
+              // USER'S FIREBASE CONFIG
               const firebaseConfig = {
                 apiKey: "AIzaSyAZLSUcRB160A4L7_Cf9erbnIBKEiRwAo4",
                 authDomain: "earnzio-in.firebaseapp.com",
@@ -183,7 +179,6 @@ jobs:
               let currentUser = null;
               let currentCoins = 0;
 
-              // Check Login Status Realtime
               onAuthStateChanged(auth, (user) => {
                 if (user) {
                   currentUser = user;
@@ -199,7 +194,6 @@ jobs:
                 }
               });
 
-              // AUTHENTICATION FUNCTION (LOGIN/REGISTER)
               window.doAuth = function(type) {
                 const email = document.getElementById('authEmail').value;
                 const pass = document.getElementById('authPass').value;
@@ -215,14 +209,14 @@ jobs:
                 } else {
                   createUserWithEmailAndPassword(auth, email, pass)
                     .then((cred) => {
-                      // Save Initial Coins (12.5) to Database for new user
-                      set(ref(db, 'users/' + cred.user.uid), {
-                        email: email,
-                        coins: 12.5,
-                        lastClaimDate: ""
-                      });
+                      set(ref(db, 'users/' + cred.user.uid), { email: email, coins: 12.5, lastClaimDate: "" });
                       document.getElementById('authLoading').style.display = 'none';
-                      alert("Registration Success! 12.5 Coins Bonus Added.");
+                      
+                      // 🔴 SUCCESS MESSAGE & AUTO SWITCH TO LOGIN
+                      alert("✅ Registration Successful!\n12.5 Coins added to your account.\nPlease Login now.");
+                      document.getElementById('authEmail').value = "";
+                      document.getElementById('authPass').value = "";
+                      if(!isLogin) toggleAuthMode(); 
                     }).catch((e) => {
                       document.getElementById('authLoading').style.display = 'none';
                       alert(e.message);
@@ -230,21 +224,17 @@ jobs:
                 }
               };
 
-              // LOGOUT
               window.logout = function() { signOut(auth); };
 
-              // FETCH USER COINS FROM DB
               function fetchUserData(uid) {
                 get(ref(db, 'users/' + uid)).then((snapshot) => {
                   if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    currentCoins = data.coins || 0;
+                    currentCoins = snapshot.val().coins || 0;
                     updateUI();
                   }
                 });
               }
 
-              // ADD COINS TO DB
               window.addCoins = function(amount) {
                 if(!currentUser) return;
                 currentCoins += amount;
@@ -252,24 +242,19 @@ jobs:
                 updateUI();
               };
 
-              // UPDATE HTML UI
               function updateUI() {
                 document.querySelectorAll('.bal-txt').forEach(el => el.innerText = currentCoins.toFixed(1));
               }
 
-              // DAILY CLAIM WITH FIREBASE CHECK
               window.claimDaily = function() {
                 if(!currentUser) return;
-                const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                const today = new Date().toISOString().split('T')[0];
                 get(ref(db, 'users/' + currentUser.uid + '/lastClaimDate')).then((snap) => {
                   if(snap.exists() && snap.val() === today) {
                     alert("You have already claimed today's bonus!");
                   } else {
                     currentCoins += 5.0;
-                    update(ref(db, 'users/' + currentUser.uid), { 
-                      coins: currentCoins,
-                      lastClaimDate: today
-                    });
+                    update(ref(db, 'users/' + currentUser.uid), { coins: currentCoins, lastClaimDate: today });
                     updateUI();
                     alert("Daily Bonus Claimed! +5 Coins");
                   }
@@ -279,9 +264,9 @@ jobs:
           </head>
           <body>
 
-            <!-- AUTH SCREEN -->
+            <!-- AUTH SCREEN (Clean Background, No Card Box) -->
             <div id="auth-screen">
-              <div class="auth-box">
+              <div class="auth-container">
                 <div class="auth-title" id="authTitle">LOGIN</div>
                 <div id="authLoading">Processing...</div>
                 <input type="email" id="authEmail" class="auth-input" placeholder="Email Address">
@@ -291,7 +276,7 @@ jobs:
               </div>
             </div>
 
-            <!-- MAIN APP (Hidden until login) -->
+            <!-- MAIN APP -->
             <div id="main-app">
               <div class="top-bar">
                 <div class="coin-box">🪙 <span class="bal-txt">0.0</span></div>
@@ -310,10 +295,6 @@ jobs:
                   <div class="task-title">Solve Captcha</div>
                   <div class="start-btn" onclick="openCaptcha()">▶ START</div>
                 </div>
-                <div class="task-card">
-                  <div class="task-title">Play Quiz</div>
-                  <div class="start-btn" onclick="openQuiz()">▶ START</div>
-                </div>
               </div>
 
               <!-- CAPTCHA TAB -->
@@ -325,19 +306,14 @@ jobs:
                 <button class="submit-btn" style="background:#0284c7;" onclick="nav('home')">BACK TO HOME</button>
               </div>
 
-              <!-- QUIZ TAB -->
-              <div id="tab-quiz" class="tab-content">
-                <h2 style="text-align:center; color:#0369a1;">GK Quiz</h2>
-                <div class="quiz-q" id="qText">QUESTION TEXT HERE</div>
-                <div id="opts"></div>
-                <div class="quiz-exp" id="qExp"></div>
-                <button class="submit-btn" style="background:#0284c7; margin-top:20px;" onclick="nav('home')">EXIT QUIZ</button>
-              </div>
-
-              <!-- 🔴 WATCH TAB (YOUTUBE EMBED) 🔴 -->
+              <!-- 🔴 WATCH TAB (Search & Play YouTube Videos) 🔴 -->
               <div id="tab-watch" class="tab-content">
-                <!-- Loads Official YouTube Mobile Site inside App -->
-                <iframe src="https://m.youtube.com/" class="yt-frame" allowfullscreen></iframe>
+                <div class="yt-search-container">
+                  <input type="text" id="ytSearchBox" class="yt-search-input" placeholder="Search YouTube Videos...">
+                  <button class="yt-search-btn" onclick="searchYoutube()">Search</button>
+                </div>
+                <!-- YouTube Embed Player for Search Results -->
+                <iframe id="ytPlayer" class="yt-frame" src="https://www.youtube.com/embed?listType=search&list=telugu+latest+movies" allowfullscreen></iframe>
               </div>
 
               <!-- PROFILE TAB & INLINE WITHDRAWAL -->
@@ -382,16 +358,24 @@ jobs:
                 <div class="menu-item" onclick="logout()" style="color:#ef4444; border-color:#ef4444;">🚪 LOGOUT <span>➜</span></div>
               </div>
 
-              <!-- BOTTOM NAV -->
+              <!-- 🔴 BOTTOM NAV (Black Outline Icons, No Background) 🔴 -->
               <div class="bottom-nav">
-                <div class="nav-icon active" id="nav-home" onclick="nav('home')">🏠</div>
-                <div class="nav-icon" id="nav-watch" onclick="nav('watch')">▶</div>
-                <div class="nav-icon" id="nav-profile" onclick="nav('profile')">👤</div>
+                <!-- Home Icon -->
+                <div class="nav-icon active" id="nav-home" onclick="nav('home')">
+                  <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                </div>
+                <!-- Play Icon -->
+                <div class="nav-icon" id="nav-watch" onclick="nav('watch')">
+                  <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+                <!-- Profile Icon -->
+                <div class="nav-icon" id="nav-profile" onclick="nav('profile')">
+                  <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
               </div>
             </div>
 
             <script>
-              // --- LOGIN TOGGLE UI ---
               let isLogin = true;
               function toggleAuthMode() {
                 isLogin = !isLogin;
@@ -401,18 +385,15 @@ jobs:
                 document.getElementById('authSwitch').innerText = isLogin ? "Don't have an account? Register Here" : "Already have an account? Login";
               }
 
-              // --- NAVIGATION ---
               function nav(tab) {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
-                
                 document.getElementById('tab-' + tab).classList.add('active');
                 if(tab === 'home' || tab === 'watch' || tab === 'profile') {
                   document.getElementById('nav-' + tab).classList.add('active');
                 }
               }
 
-              // --- INLINE TOGGLES (PROFILE) ---
               function toggleSection(id) {
                 const sec = document.getElementById(id);
                 if(sec.style.display === 'block') {
@@ -438,7 +419,16 @@ jobs:
                 }
               }
 
-              // --- CAPTCHA ---
+              // 🔴 YOUTUBE SEARCH FUNCTION 🔴
+              function searchYoutube() {
+                const query = document.getElementById('ytSearchBox').value.trim();
+                if(!query) return;
+                // Embeds a YouTube Search Results Playlist Player
+                const embedUrl = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(query);
+                document.getElementById('ytPlayer').src = embedUrl;
+              }
+
+              // CAPTCHA
               let curCap = "";
               function genCap() {
                 const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; curCap = "";
@@ -449,38 +439,10 @@ jobs:
               function openCaptcha() { nav('captcha'); genCap(); }
               function submitCaptcha() {
                 if(document.getElementById('capInput').value.trim().toUpperCase() === curCap) {
-                  addCoins(1.5); // 🔴 FIREBASE UPDATE FUNCTION
+                  addCoins(1.5); 
                   alert("Correct! +1.5 Coins Added"); 
                   nav('home');
                 } else { alert("Wrong Captcha! Try again."); genCap(); }
-              }
-
-              // --- QUIZ ---
-              const qData = { q: "What is the capital of India?", o: ["Mumbai", "New Delhi", "Chennai", "Kolkata"], a: 1, e: "New Delhi is the capital of India." };
-              function openQuiz() {
-                nav('quiz');
-                document.getElementById('qText').innerText = qData.q;
-                document.getElementById('qExp').style.display = 'none';
-                let oHtml = "";
-                const lets = ["A", "B", "C", "D"];
-                qData.o.forEach((opt, i) => {
-                  oHtml += `<div class="quiz-opt" id="qo_${i}" onclick="checkQ(${i})"><span class="opt-let">${lets[i]}</span> ${opt}</div>`;
-                });
-                document.getElementById('opts').innerHTML = oHtml;
-              }
-              function checkQ(idx) {
-                document.getElementById('qo_'+qData.a).classList.add('correct');
-                if(idx === qData.a) {
-                  addCoins(2.0); // 🔴 FIREBASE UPDATE FUNCTION
-                  document.getElementById('qExp').innerHTML = `✓ CORRECT!<br>${qData.e}`;
-                  document.getElementById('qExp').style.display = 'block';
-                  setTimeout(()=> { nav('home'); }, 2000);
-                } else {
-                  document.getElementById('qo_'+idx).classList.add('wrong');
-                  document.getElementById('qExp').innerHTML = `<span style="color:#ffb3b3;">✗ WRONG ANSWER</span><br>${qData.e}`;
-                  document.getElementById('qExp').style.display = 'block';
-                  setTimeout(()=> { nav('home'); }, 3000);
-                }
               }
             </script>
           </body>
@@ -595,33 +557,23 @@ jobs:
                       webView.setVisibility(View.VISIBLE);
                   });
                   
-                  // 🔥 WEBVIEW SETUP (Important for Firebase & YouTube) 🔥
+                  // 🔥 WEBVIEW SETUP 🔥
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
-                  webSettings.setDomStorageEnabled(true); // REQUIRED FOR FIREBASE AUTH
-                  webSettings.setMediaPlaybackRequiresUserGesture(false); // REQUIRED FOR YOUTUBE
+                  webSettings.setDomStorageEnabled(true); 
+                  webSettings.setMediaPlaybackRequiresUserGesture(false); 
                   
-                  // Make YouTube Load Properly as Mobile version
-                  webSettings.setUserAgentString("Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36");
-                  
-                  webView.setWebViewClient(new WebViewClient() {
-                      // Prevent links from opening in external browser
-                      @Override
-                      public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                          return false;
-                      }
-                  });
-                  
+                  webView.setWebViewClient(new WebViewClient());
                   webView.loadUrl("file:///android_asset/index.html");
               }
           }
           EOF
 
-      - name: Build Pro APK
+      - name: Build Final APK
         run: gradle :app:assembleDebug
 
-      - name: Upload Ultimate Firebase APK
+      - name: Upload Final Firebase APK
         uses: actions/upload-artifact@v4
         with:
-          name: EARNZIO-FIREBASE-APK
+          name: EARNZIO-FINAL-APK
           path: app/build/outputs/apk/debug/app-debug.apk
