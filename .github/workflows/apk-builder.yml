@@ -1,4 +1,4 @@
-name: Build Earnzio Pro Ultimate APK
+name: Build Earnzio Firebase Ultimate APK
 
 on:
   workflow_dispatch: 
@@ -67,7 +67,7 @@ jobs:
           wget -O app/src/main/res/raw/splash_video.mp4 "https://res.cloudinary.com/ixxjuj5g/video/upload/v1790382792/InShot_20260926_054447616.mp4"
 
           # ==========================================
-          # 100% OFFLINE HTML + CSS + JS (NO WEB LINKS)
+          # 100% OFFLINE HTML + CSS + FIREBASE JS 
           # ==========================================
           cat << 'EOF' > app/src/main/assets/index.html
           <!DOCTYPE html>
@@ -75,123 +75,205 @@ jobs:
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-            <title>Earnzio Professional</title>
+            <title>Earnzio Firebase</title>
             <style>
               @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
               
+              /* 🔵 LIGHT BLUE & WHITE GRADIENT THEME 🔵 */
               body { 
                 margin: 0; padding: 0; font-family: 'Roboto', sans-serif;
-                background: linear-gradient(135deg, #e6e9ff 0%, #b8c6ff 50%, #859aff 100%);
+                background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
                 background-attachment: fixed; color: #000; user-select: none; -webkit-user-select: none;
               }
               
               /* LOGIN & REGISTER SCREEN */
               #auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; box-sizing: border-box; }
-              .auth-box { background: white; width: 100%; max-width: 400px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); text-align: center; }
-              .auth-title { font-size: 28px; font-weight: 900; color: #2e1065; margin-bottom: 20px; }
-              .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
-              .auth-input:focus { border-color: #15803d; }
-              .auth-btn { background: #2e1065; color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
-              .auth-switch { color: #15803d; font-weight: bold; cursor: pointer; font-size: 14px; text-decoration: underline; }
+              .auth-box { background: rgba(255,255,255,0.9); width: 100%; max-width: 400px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border: 2px solid #bae6fd; }
+              .auth-title { font-size: 28px; font-weight: 900; color: #0369a1; margin-bottom: 20px; }
+              .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
+              .auth-input:focus { border-color: #0284c7; }
+              .auth-btn { background: #0284c7; color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+              .auth-switch { color: #0369a1; font-weight: bold; cursor: pointer; font-size: 14px; text-decoration: underline; margin-top:10px; }
+              #authLoading { display: none; color: #0369a1; font-weight: bold; margin-bottom: 10px; }
 
               /* MAIN APP CONTAINER */
-              #main-app { display: none; padding-bottom: 80px; }
+              #main-app { display: none; padding-bottom: 70px; }
               
               .top-bar { display: flex; justify-content: flex-end; padding: 15px; }
-              .coin-box { background: white; padding: 5px 15px; border-radius: 8px; border: 1px solid #ddd; font-weight: bold; font-size: 20px; color: #15803d; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+              .coin-box { background: white; padding: 8px 15px; border-radius: 8px; border: 2px solid #bae6fd; font-weight: 900; font-size: 20px; color: #059669; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
               
               .tab-content { display: none; padding: 10px; animation: fadeIn 0.3s ease; }
               .tab-content.active { display: block; }
               @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
               /* HOME TAB */
-              .daily-claim-box { background: rgba(255,255,255,0.8); border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center; }
+              .daily-claim-box { background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center; border: 2px solid #bae6fd; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
               .days-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-              .day-box { background: white; border: 2px solid #333; border-radius: 8px; width: 12%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
+              .day-box { background: #f0f9ff; border: 2px solid #7dd3fc; border-radius: 8px; width: 12%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; color:#0369a1; }
+              .day-box.claimed { background: #059669; color: white; border-color: #059669; }
               .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-              .task-card { background: rgba(255,255,255,0.7); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; position: relative; }
-              .task-title { font-size: 22px; font-weight: 900; margin: 15px 0 10px 0; color: #2e1065; }
-              .start-btn { background: white; border: 2px solid #ddd; padding: 10px 30px; border-radius: 8px; font-size: 20px; font-weight: 900; color: #15803d; cursor: pointer; }
+              
+              .task-card { background: white; border: 2px solid #bae6fd; border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+              .task-title { font-size: 22px; font-weight: 900; margin: 15px 0 10px 0; color: #0369a1; }
+              .start-btn { background: #f0f9ff; border: 2px solid #38bdf8; padding: 10px 30px; border-radius: 8px; font-size: 20px; font-weight: 900; color: #0284c7; cursor: pointer; }
+
+              /* CAPTCHA & QUIZ */
+              .submit-btn { background: #059669; color: white; width: 100%; padding: 15px; border-radius: 8px; font-size: 20px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom:10px; }
+              .captcha-box { background: #f0f9ff; padding: 30px 20px; text-align: center; font-size: 28px; font-family: 'Courier New', monospace; font-weight: 900; letter-spacing: 8px; border: 2px dashed #0284c7; margin: 20px 0; border-radius: 8px; color:#0369a1;}
+              .captcha-input { width: 100%; padding: 15px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline:none; }
+              
+              .quiz-q { background: white; padding: 20px; border-radius: 8px; font-size: 18px; font-weight: 900; margin: 20px 0; border: 2px solid #bae6fd; color:#0369a1; }
+              .quiz-opt { background: #f0f9ff; padding: 15px; border: 2px solid #bae6fd; border-radius: 8px; margin-bottom: 10px; font-weight: bold; display: flex; gap: 15px; cursor: pointer; font-size: 16px; align-items: center; color:#0c4a6e; }
+              .opt-let { font-weight: 900; background: white; border: 2px solid #7dd3fc; padding: 5px 12px; border-radius: 5px; }
+              .quiz-opt.correct { background: #059669; color: white; border-color: #059669; }
+              .quiz-opt.wrong { background: #ef4444; color: white; border-color: #ef4444; }
+              .quiz-exp { background: #059669; color: white; padding: 15px; border-radius: 8px; font-weight: bold; display: none; margin-top: 15px; font-size: 16px; text-align:center; }
 
               /* YOUTUBE WATCH TAB */
-              .yt-player-container { width: 100%; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 15px; display: none; }
-              .yt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-              .yt-thumb { width: 100%; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.3s; }
-              .yt-thumb:active { border-color: #ef4444; transform: scale(0.95); }
-              .yt-title { font-size: 14px; font-weight: bold; text-align: center; margin-top: 5px; color: #333; }
+              #tab-watch { padding: 0 !important; height: calc(100vh - 65px); background: #000; }
+              .yt-frame { width: 100%; height: 100%; border: none; }
 
-              /* PROFILE TAB & INLINE WITHDRAWAL */
+              /* PROFILE TAB */
               .pro-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-              .pro-name { background: white; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; font-size: 18px; flex-grow: 1; text-align: center; margin: 0 10px; }
-              .id-box { background: #15803d; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold; margin-bottom: 15px; text-align: center; }
-              .pro-wallet { background: #2e1065; color: white; text-align: center; padding: 20px; border-radius: 10px; font-size: 45px; font-weight: 900; margin-bottom: 15px; }
+              .pro-name { background: white; padding: 10px; border: 2px solid #bae6fd; border-radius: 8px; font-weight: bold; font-size: 16px; flex-grow: 1; text-align: center; margin: 0 10px; color:#0369a1;}
+              .id-box { background: #0284c7; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold; margin-bottom: 15px; text-align: center; }
+              .pro-wallet { background: #0369a1; color: white; text-align: center; padding: 20px; border-radius: 10px; font-size: 45px; font-weight: 900; margin-bottom: 15px; border:3px solid #7dd3fc; }
               
-              .menu-item { background: white; padding: 15px 20px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; cursor: pointer; color:#2e1065; }
+              .menu-item { background: white; padding: 15px 20px; border: 2px solid #bae6fd; border-radius: 8px; margin-bottom: 10px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; cursor: pointer; color:#0369a1; }
               
               /* INLINE EXPANDABLE SECTIONS */
-              .inline-section { display: none; background: rgba(255,255,255,0.9); padding: 15px; border: 2px dashed #ccc; border-radius: 8px; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
+              .inline-section { display: none; background: rgba(255,255,255,0.9); padding: 15px; border: 2px dashed #38bdf8; border-radius: 8px; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
               .w-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-              .w-tab { flex: 1; background: white; text-align: center; padding: 10px; border: 2px solid #ccc; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; }
-              .w-tab.active { background: #e5e7eb; border-color:#333; }
-              .w-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; box-sizing: border-box; }
-              .submit-btn { background: #15803d; color: white; width: 100%; padding: 12px; border-radius: 8px; font-size: 18px; font-weight: 900; border: none; cursor: pointer; margin-bottom:10px; }
+              .w-tab { flex: 1; background: white; text-align: center; padding: 10px; border: 2px solid #bae6fd; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; color:#0369a1;}
+              .w-tab.active { background: #e0f2fe; border-color:#0284c7; }
+              .w-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #bae6fd; border-radius: 8px; font-weight: bold; box-sizing: border-box; outline:none; }
               
-              .tx-box { padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 8px; display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; background:white; }
-              .tx-suc { border-left: 5px solid #15803d; }
+              .tx-box { padding: 10px; border-radius: 8px; border: 2px solid #bae6fd; margin-bottom: 8px; display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; background:white; color:#0c4a6e;}
+              .tx-suc { border-left: 5px solid #059669; }
               .tx-pen { border-left: 5px solid #f59e0b; }
 
               /* BOTTOM NAV */
-              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid #e5e7eb; z-index: 1000; }
-              .nav-icon { width: 50px; height: 50px; background: #f3f4f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; border: 2px solid #ddd; transition: 0.3s; }
-              .nav-icon.active { background: #f59e0b; color: white; border-color: #d97706; transform: scale(1.1); }
+              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 8px 0; border-top: 2px solid #bae6fd; z-index: 1000; }
+              .nav-icon { width: 50px; height: 50px; background: #f0f9ff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; border: 2px solid #bae6fd; transition: 0.3s; }
+              .nav-icon.active { background: #0284c7; color: white; border-color: #0369a1; transform: scale(1.1); }
             </style>
             
-            <!-- FIREBASE SDKS -->
+            <!-- 🔥 FIREBASE SDK SETUP 🔥 -->
             <script type="module">
               import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-              import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+              import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+              import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-              // 🔴 MEE FIREBASE CONFIG IKKADA PETTANDI 🔴
+              // 🔴 MEE FIREBASE CONFIG DETAILS 🔴
               const firebaseConfig = {
-                apiKey: "YOUR_API_KEY",
-                authDomain: "YOUR_PROJECT.firebaseapp.com",
-                projectId: "YOUR_PROJECT",
-                storageBucket: "YOUR_PROJECT.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:abcdef"
+                apiKey: "AIzaSyAZLSUcRB160A4L7_Cf9erbnIBKEiRwAo4",
+                authDomain: "earnzio-in.firebaseapp.com",
+                databaseURL: "https://earnzio-in-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "earnzio-in",
+                storageBucket: "earnzio-in.firebasestorage.app",
+                messagingSenderId: "935935737332",
+                appId: "1:935935737332:web:70bc35401fb05995274da1",
+                measurementId: "G-BGW0EW7312"
               };
 
-              // Initialize Firebase
-              let app, auth;
-              try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-              } catch(e) { console.log("Firebase not configured yet."); }
+              const app = initializeApp(firebaseConfig);
+              const auth = getAuth(app);
+              const db = getDatabase(app);
 
+              let currentUser = null;
+              let currentCoins = 0;
+
+              // Check Login Status Realtime
+              onAuthStateChanged(auth, (user) => {
+                if (user) {
+                  currentUser = user;
+                  document.getElementById('auth-screen').style.display = 'none';
+                  document.getElementById('main-app').style.display = 'block';
+                  document.getElementById('proEmail').innerText = user.email;
+                  document.getElementById('proUid').innerText = "ID: " + user.uid.substring(0,6).toUpperCase();
+                  fetchUserData(user.uid);
+                } else {
+                  currentUser = null;
+                  document.getElementById('auth-screen').style.display = 'flex';
+                  document.getElementById('main-app').style.display = 'none';
+                }
+              });
+
+              // AUTHENTICATION FUNCTION (LOGIN/REGISTER)
               window.doAuth = function(type) {
                 const email = document.getElementById('authEmail').value;
                 const pass = document.getElementById('authPass').value;
-                if(!email || !pass) { alert("Please enter email & password"); return; }
+                if(!email || !pass) { alert("Please enter Email & Password"); return; }
                 
-                // If API Key is default, bypass for testing
-                if(firebaseConfig.apiKey === "YOUR_API_KEY") {
-                  alert("Test Login Success! Please add Real Firebase Keys later.");
-                  document.getElementById('auth-screen').style.display = 'none';
-                  document.getElementById('main-app').style.display = 'block';
-                  return;
-                }
+                document.getElementById('authLoading').style.display = 'block';
 
                 if(type === 'login') {
-                  signInWithEmailAndPassword(auth, email, pass)
-                    .then((user) => {
-                      document.getElementById('auth-screen').style.display = 'none';
-                      document.getElementById('main-app').style.display = 'block';
-                    }).catch((error) => { alert(error.message); });
+                  signInWithEmailAndPassword(auth, email, pass).catch((e) => {
+                    document.getElementById('authLoading').style.display = 'none';
+                    alert(e.message);
+                  });
                 } else {
                   createUserWithEmailAndPassword(auth, email, pass)
-                    .then((user) => { alert("Registered Successfully!"); })
-                    .catch((error) => { alert(error.message); });
+                    .then((cred) => {
+                      // Save Initial Coins (12.5) to Database for new user
+                      set(ref(db, 'users/' + cred.user.uid), {
+                        email: email,
+                        coins: 12.5,
+                        lastClaimDate: ""
+                      });
+                      document.getElementById('authLoading').style.display = 'none';
+                      alert("Registration Success! 12.5 Coins Bonus Added.");
+                    }).catch((e) => {
+                      document.getElementById('authLoading').style.display = 'none';
+                      alert(e.message);
+                    });
                 }
+              };
+
+              // LOGOUT
+              window.logout = function() { signOut(auth); };
+
+              // FETCH USER COINS FROM DB
+              function fetchUserData(uid) {
+                get(ref(db, 'users/' + uid)).then((snapshot) => {
+                  if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    currentCoins = data.coins || 0;
+                    updateUI();
+                  }
+                });
+              }
+
+              // ADD COINS TO DB
+              window.addCoins = function(amount) {
+                if(!currentUser) return;
+                currentCoins += amount;
+                update(ref(db, 'users/' + currentUser.uid), { coins: currentCoins });
+                updateUI();
+              };
+
+              // UPDATE HTML UI
+              function updateUI() {
+                document.querySelectorAll('.bal-txt').forEach(el => el.innerText = currentCoins.toFixed(1));
+              }
+
+              // DAILY CLAIM WITH FIREBASE CHECK
+              window.claimDaily = function() {
+                if(!currentUser) return;
+                const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                get(ref(db, 'users/' + currentUser.uid + '/lastClaimDate')).then((snap) => {
+                  if(snap.exists() && snap.val() === today) {
+                    alert("You have already claimed today's bonus!");
+                  } else {
+                    currentCoins += 5.0;
+                    update(ref(db, 'users/' + currentUser.uid), { 
+                      coins: currentCoins,
+                      lastClaimDate: today
+                    });
+                    updateUI();
+                    alert("Daily Bonus Claimed! +5 Coins");
+                  }
+                });
               };
             </script>
           </head>
@@ -201,9 +283,10 @@ jobs:
             <div id="auth-screen">
               <div class="auth-box">
                 <div class="auth-title" id="authTitle">LOGIN</div>
+                <div id="authLoading">Processing...</div>
                 <input type="email" id="authEmail" class="auth-input" placeholder="Email Address">
-                <input type="password" id="authPass" class="auth-input" placeholder="Password">
-                <button class="auth-btn" id="authBtn" onclick="doAuth('login')">LOGIN SECURELY</button>
+                <input type="password" id="authPass" class="auth-input" placeholder="Password (Min 6 chars)">
+                <button class="auth-btn" id="authBtn" onclick="doAuth('login')">LOGIN TO ACCOUNT</button>
                 <div class="auth-switch" id="authSwitch" onclick="toggleAuthMode()">Don't have an account? Register Here</div>
               </div>
             </div>
@@ -211,7 +294,7 @@ jobs:
             <!-- MAIN APP (Hidden until login) -->
             <div id="main-app">
               <div class="top-bar">
-                <div class="coin-box">🪙 <span class="bal-txt">12.5</span></div>
+                <div class="coin-box">🪙 <span class="bal-txt">0.0</span></div>
               </div>
 
               <!-- HOME TAB -->
@@ -221,61 +304,54 @@ jobs:
                     <div class="day-box">1</div><div class="day-box">2</div><div class="day-box">3</div>
                     <div class="day-box">4</div><div class="day-box">5</div><div class="day-box">6</div><div class="day-box">7</div>
                   </div>
-                  <button class="claim-btn" onclick="alert('Claimed +5 Coins!')">CLAIM NOW</button>
+                  <button class="claim-btn" onclick="claimDaily()">CLAIM DAILY BONUS</button>
                 </div>
                 <div class="task-card">
                   <div class="task-title">Solve Captcha</div>
-                  <div class="start-btn" onclick="alert('Captcha Started!')">▶ START</div>
+                  <div class="start-btn" onclick="openCaptcha()">▶ START</div>
                 </div>
                 <div class="task-card">
                   <div class="task-title">Play Quiz</div>
-                  <div class="start-btn" onclick="alert('Quiz Started!')">▶ START</div>
+                  <div class="start-btn" onclick="openQuiz()">▶ START</div>
                 </div>
               </div>
 
-              <!-- WATCH TAB (YOUTUBE VIDEOS) -->
-              <div id="tab-watch" class="tab-content">
-                <h2 style="text-align:center; color:#2e1065; margin-top:0;">Watch & Earn</h2>
-                
-                <!-- YouTube Iframe Player -->
-                <div class="yt-player-container" id="ytPlayerContainer">
-                  <iframe id="ytIframe" width="100%" height="220" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                </div>
+              <!-- CAPTCHA TAB -->
+              <div id="tab-captcha" class="tab-content">
+                <h2 style="text-align:center; color:#0369a1;">Solve Captcha</h2>
+                <div class="captcha-box" id="capText">A7X9P</div>
+                <input type="text" class="captcha-input" id="capInput" placeholder="ENTER TEXT HERE">
+                <button class="submit-btn" onclick="submitCaptcha()">SUBMIT CAPTCHA</button>
+                <button class="submit-btn" style="background:#0284c7;" onclick="nav('home')">BACK TO HOME</button>
+              </div>
 
-                <div class="yt-grid">
-                  <div onclick="playVideo('gR49U4k42y8')">
-                    <img src="https://img.youtube.com/vi/gR49U4k42y8/mqdefault.jpg" class="yt-thumb">
-                    <div class="yt-title">Telugu Latest News</div>
-                  </div>
-                  <div onclick="playVideo('zT9b6v3X-3Y')">
-                    <img src="https://img.youtube.com/vi/zT9b6v3X-3Y/mqdefault.jpg" class="yt-thumb">
-                    <div class="yt-title">Comedy Scenes</div>
-                  </div>
-                  <div onclick="playVideo('E07s5ZYygMg')">
-                    <img src="https://img.youtube.com/vi/E07s5ZYygMg/mqdefault.jpg" class="yt-thumb">
-                    <div class="yt-title">Tech Updates</div>
-                  </div>
-                  <div onclick="playVideo('F44gE2tFz8A')">
-                    <img src="https://img.youtube.com/vi/F44gE2tFz8A/mqdefault.jpg" class="yt-thumb">
-                    <div class="yt-title">Trending Movies</div>
-                  </div>
-                </div>
+              <!-- QUIZ TAB -->
+              <div id="tab-quiz" class="tab-content">
+                <h2 style="text-align:center; color:#0369a1;">GK Quiz</h2>
+                <div class="quiz-q" id="qText">QUESTION TEXT HERE</div>
+                <div id="opts"></div>
+                <div class="quiz-exp" id="qExp"></div>
+                <button class="submit-btn" style="background:#0284c7; margin-top:20px;" onclick="nav('home')">EXIT QUIZ</button>
+              </div>
+
+              <!-- 🔴 WATCH TAB (YOUTUBE EMBED) 🔴 -->
+              <div id="tab-watch" class="tab-content">
+                <!-- Loads Official YouTube Mobile Site inside App -->
+                <iframe src="https://m.youtube.com/" class="yt-frame" allowfullscreen></iframe>
               </div>
 
               <!-- PROFILE TAB & INLINE WITHDRAWAL -->
               <div id="tab-profile" class="tab-content">
                 <div class="pro-header">
-                  <div class="pro-name">VIKASH RAJU</div>
+                  <div class="pro-name" id="proEmail">user@email.com</div>
                 </div>
-                <div class="id-box">USER ID : 381130</div>
-                <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
+                <div class="id-box" id="proUid">ID : XXXXXX</div>
+                <div class="pro-wallet">🪙 <span class="bal-txt">0.0</span></div>
                 
-                <!-- 🔴 INLINE WITHDRAWAL BUTTON 🔴 -->
                 <div class="menu-item" onclick="toggleSection('withdrawSec')">
                   💳 WITHDRAWAL <span>▼</span>
                 </div>
                 
-                <!-- INLINE WITHDRAWAL FORM -->
                 <div id="withdrawSec" class="inline-section">
                   <div class="w-tabs">
                     <div class="w-tab active" id="tabBank" onclick="selW('bank')">BANK 🏦</div>
@@ -287,13 +363,12 @@ jobs:
                     <input type="number" class="w-input" placeholder="ACCOUNT NUMBER">
                   </div>
                   <div id="w-form-upi" style="display:none;">
-                    <input type="text" class="w-input" id="upiId" placeholder="ENTER UPI ID">
+                    <input type="text" class="w-input" placeholder="ENTER UPI ID">
                   </div>
-                  <input type="number" id="wAmount" class="w-input" placeholder="Amount (e.g. 12.50)" style="border-color:#2e1065;">
-                  <button class="submit-btn" onclick="submitAppScript()">SUBMIT REQUEST</button>
+                  <input type="number" class="w-input" placeholder="Amount" style="border-color:#0284c7;">
+                  <button class="submit-btn" onclick="alert('Withdrawal Request Submitted!')">SUBMIT REQUEST</button>
                 </div>
 
-                <!-- 🔴 INLINE TRANSACTIONS BUTTON 🔴 -->
                 <div class="menu-item" onclick="toggleSection('txSec')">
                   📜 RECENT TRANSACTIONS <span>▼</span>
                 </div>
@@ -304,8 +379,7 @@ jobs:
                   <div class="tx-box tx-suc"><span>Success</span> <span>🪙 147</span></div>
                 </div>
 
-                <div class="menu-item">⚙️ SETTINGS <span>➜</span></div>
-                <div class="menu-item">📞 CONTACT US <span>➜</span></div>
+                <div class="menu-item" onclick="logout()" style="color:#ef4444; border-color:#ef4444;">🚪 LOGOUT <span>➜</span></div>
               </div>
 
               <!-- BOTTOM NAV -->
@@ -317,12 +391,12 @@ jobs:
             </div>
 
             <script>
-              // --- LOGIN TOGGLE ---
+              // --- LOGIN TOGGLE UI ---
               let isLogin = true;
               function toggleAuthMode() {
                 isLogin = !isLogin;
                 document.getElementById('authTitle').innerText = isLogin ? "LOGIN" : "REGISTER";
-                document.getElementById('authBtn').innerText = isLogin ? "LOGIN SECURELY" : "CREATE ACCOUNT";
+                document.getElementById('authBtn').innerText = isLogin ? "LOGIN TO ACCOUNT" : "CREATE ACCOUNT";
                 document.getElementById('authBtn').setAttribute('onclick', isLogin ? "doAuth('login')" : "doAuth('register')");
                 document.getElementById('authSwitch').innerText = isLogin ? "Don't have an account? Register Here" : "Already have an account? Login";
               }
@@ -331,32 +405,19 @@ jobs:
               function nav(tab) {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
-                document.getElementById('tab-' + tab).classList.add('active');
-                document.getElementById('nav-' + tab).classList.add('active');
                 
-                // Pause YT Video if leaving watch tab
-                if(tab !== 'watch') {
-                  document.getElementById('ytIframe').src = "";
-                  document.getElementById('ytPlayerContainer').style.display = 'none';
+                document.getElementById('tab-' + tab).classList.add('active');
+                if(tab === 'home' || tab === 'watch' || tab === 'profile') {
+                  document.getElementById('nav-' + tab).classList.add('active');
                 }
               }
 
-              // --- YOUTUBE PLAY LOGIC ---
-              function playVideo(videoId) {
-                const playerContainer = document.getElementById('ytPlayerContainer');
-                const iframe = document.getElementById('ytIframe');
-                playerContainer.style.display = 'block';
-                iframe.src = "https://www.youtube.com/embed/" + videoId + "?autoplay=1&modestbranding=1&rel=0";
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }
-
-              // --- INLINE TOGGLES (WITHDRAWAL / TRANSACTIONS) ---
+              // --- INLINE TOGGLES (PROFILE) ---
               function toggleSection(id) {
                 const sec = document.getElementById(id);
                 if(sec.style.display === 'block') {
                   sec.style.display = 'none';
                 } else {
-                  // Hide others before opening one
                   document.getElementById('withdrawSec').style.display = 'none';
                   document.getElementById('txSec').style.display = 'none';
                   sec.style.display = 'block';
@@ -377,32 +438,49 @@ jobs:
                 }
               }
 
-              // --- GOOGLE APP SCRIPT LOGIC (WITHDRAWAL) ---
-              function submitAppScript() {
-                const amount = document.getElementById('wAmount').value;
-                const upi = document.getElementById('upiId').value;
-                if(!amount) { alert("Enter amount!"); return; }
+              // --- CAPTCHA ---
+              let curCap = "";
+              function genCap() {
+                const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; curCap = "";
+                for(let i=0; i<6; i++) curCap += c.charAt(Math.floor(Math.random()*c.length));
+                document.getElementById('capText').innerText = curCap;
+                document.getElementById('capInput').value = "";
+              }
+              function openCaptcha() { nav('captcha'); genCap(); }
+              function submitCaptcha() {
+                if(document.getElementById('capInput').value.trim().toUpperCase() === curCap) {
+                  addCoins(1.5); // 🔴 FIREBASE UPDATE FUNCTION
+                  alert("Correct! +1.5 Coins Added"); 
+                  nav('home');
+                } else { alert("Wrong Captcha! Try again."); genCap(); }
+              }
 
-                // 🔴 MEE APPS SCRIPT URL IKKADA PETTANDI 🔴
-                const APPSCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
-
-                if(APPSCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL") {
-                   alert("Test Mode: Withdrawal Requested for " + amount + " Coins!\n(Add actual AppScript URL to save to Google Sheets)");
-                   document.getElementById('wAmount').value = "";
-                   toggleSection('withdrawSec');
-                   return;
+              // --- QUIZ ---
+              const qData = { q: "What is the capital of India?", o: ["Mumbai", "New Delhi", "Chennai", "Kolkata"], a: 1, e: "New Delhi is the capital of India." };
+              function openQuiz() {
+                nav('quiz');
+                document.getElementById('qText').innerText = qData.q;
+                document.getElementById('qExp').style.display = 'none';
+                let oHtml = "";
+                const lets = ["A", "B", "C", "D"];
+                qData.o.forEach((opt, i) => {
+                  oHtml += `<div class="quiz-opt" id="qo_${i}" onclick="checkQ(${i})"><span class="opt-let">${lets[i]}</span> ${opt}</div>`;
+                });
+                document.getElementById('opts').innerHTML = oHtml;
+              }
+              function checkQ(idx) {
+                document.getElementById('qo_'+qData.a).classList.add('correct');
+                if(idx === qData.a) {
+                  addCoins(2.0); // 🔴 FIREBASE UPDATE FUNCTION
+                  document.getElementById('qExp').innerHTML = `✓ CORRECT!<br>${qData.e}`;
+                  document.getElementById('qExp').style.display = 'block';
+                  setTimeout(()=> { nav('home'); }, 2000);
+                } else {
+                  document.getElementById('qo_'+idx).classList.add('wrong');
+                  document.getElementById('qExp').innerHTML = `<span style="color:#ffb3b3;">✗ WRONG ANSWER</span><br>${qData.e}`;
+                  document.getElementById('qExp').style.display = 'block';
+                  setTimeout(()=> { nav('home'); }, 3000);
                 }
-
-                fetch(APPSCRIPT_URL, {
-                  method: 'POST',
-                  mode: 'no-cors',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ action: "withdraw", userId: "381130", amount: amount, upi: upi })
-                }).then(() => {
-                  alert("Withdrawal Request Submitted Successfully!");
-                  document.getElementById('wAmount').value = "";
-                  toggleSection('withdrawSec');
-                }).catch(err => alert("Error submitting request"));
               }
             </script>
           </body>
@@ -445,7 +523,7 @@ jobs:
           <resources>
               <style name="Theme.App" parent="Theme.AppCompat.Light.NoActionBar">
                   <item name="android:windowBackground">@android:color/white</item>
-                  <item name="android:statusBarColor">#e6e9ff</item>
+                  <item name="android:statusBarColor">#e0f2fe</item>
                   <item name="android:windowLightStatusBar">true</item>
               </style>
           </resources>
@@ -468,7 +546,7 @@ jobs:
           </manifest>
           EOF
 
-          # MAIN ACTIVITY (Handles Splash -> WebView)
+          # MAIN ACTIVITY 
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
@@ -517,13 +595,23 @@ jobs:
                       webView.setVisibility(View.VISIBLE);
                   });
                   
-                  // 🔥 WEBVIEW SETUP 🔥
+                  // 🔥 WEBVIEW SETUP (Important for Firebase & YouTube) 🔥
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
-                  webSettings.setDomStorageEnabled(true);
-                  webSettings.setMediaPlaybackRequiresUserGesture(false);
+                  webSettings.setDomStorageEnabled(true); // REQUIRED FOR FIREBASE AUTH
+                  webSettings.setMediaPlaybackRequiresUserGesture(false); // REQUIRED FOR YOUTUBE
                   
-                  webView.setWebViewClient(new WebViewClient());
+                  // Make YouTube Load Properly as Mobile version
+                  webSettings.setUserAgentString("Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36");
+                  
+                  webView.setWebViewClient(new WebViewClient() {
+                      // Prevent links from opening in external browser
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                          return false;
+                      }
+                  });
+                  
                   webView.loadUrl("file:///android_asset/index.html");
               }
           }
@@ -532,8 +620,8 @@ jobs:
       - name: Build Pro APK
         run: gradle :app:assembleDebug
 
-      - name: Upload Pro APK
+      - name: Upload Ultimate Firebase APK
         uses: actions/upload-artifact@v4
         with:
-          name: EARNZIO-PROFESSIONAL-APK
+          name: EARNZIO-FIREBASE-APK
           path: app/build/outputs/apk/debug/app-debug.apk
