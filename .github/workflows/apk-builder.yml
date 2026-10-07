@@ -1,4 +1,4 @@
-name: Build Earnzio Pro APK (Splash + Offline)
+name: Build Earnzio Ultimate Offline APK
 
 on:
   workflow_dispatch: 
@@ -75,129 +75,200 @@ jobs:
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-            <title>Earnzio Pro</title>
+            <title>Earnzio Ultimate</title>
+            <link href='https://fonts.googleapis.com/css2?family=Gidugu&display=swap' rel='stylesheet'/>
             <style>
               @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
               
               body { 
-                margin: 0; padding: 0; font-family: 'Roboto', sans-serif;
+                margin: 0; padding: 0; font-family: 'Roboto', 'Gidugu', sans-serif;
                 background: linear-gradient(135deg, #e6e9ff 0%, #b8c6ff 50%, #859aff 100%);
-                background-attachment: fixed;
-                color: #000; padding-bottom: 80px; user-select: none; -webkit-user-select: none;
+                background-attachment: fixed; color: #000; padding-bottom: 80px; user-select: none; -webkit-user-select: none;
               }
               
               .top-bar { display: flex; justify-content: flex-end; padding: 15px; }
-              .coin-box { background: white; padding: 8px 18px; border-radius: 8px; border: 2px solid #ddd; font-weight: bold; font-size: 22px; color: #15803d; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+              .coin-box { background: white; padding: 5px 15px; border-radius: 8px; border: 1px solid #ddd; font-weight: bold; font-size: 20px; color: #15803d; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+              
+              /* TOP NAVIGATION FOR INTERNAL PAGES (CAPTCHA/QUIZ) */
+              .page-top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; margin-bottom: 15px; border-radius: 0 0 15px 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+              .door-btn { background: #fee2e2; color: #ef4444; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: 1px solid #fca5a5; display: flex; align-items: center; gap: 5px; }
+              .page-title { font-size: 20px; font-weight: 900; color: #ef4444; letter-spacing: 1px; }
               
               .tab-content { display: none; padding: 10px; animation: fadeIn 0.3s ease; }
               .tab-content.active { display: block; }
               @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
               /* HOME TAB */
-              .daily-claim-box { background: rgba(255,255,255,0.8); border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: center; }
+              .daily-claim-box { background: rgba(255,255,255,0.8); border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center; }
               .days-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
               .day-box { background: white; border: 2px solid #333; border-radius: 8px; width: 12%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
               .day-box.claimed { background: #15803d; color: white; border-color: #15803d; }
-              .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 22px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+              .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 
               .task-card { background: rgba(255,255,255,0.7); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; position: relative; }
-              .task-num { position: absolute; top: 15px; left: 15px; background: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; border: 2px solid #333; font-size: 20px; }
-              .task-title { font-size: 24px; font-weight: 900; margin: 20px 0 10px 0; color: #2e1065; }
-              .start-btn { background: white; border: 2px solid #ddd; padding: 12px 35px; border-radius: 8px; font-size: 24px; font-weight: 900; color: #15803d; cursor: pointer; }
+              .task-num { position: absolute; top: 15px; left: 15px; background: white; width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid #333; font-size: 18px; }
+              .task-title { font-size: 22px; font-weight: 900; margin: 15px 0 10px 0; color: #2e1065; }
+              .start-btn { background: white; border: 2px solid #ddd; padding: 10px 30px; border-radius: 8px; font-size: 22px; font-weight: 900; color: #15803d; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+              /* CAPTCHA & QUIZ SHARED */
+              .submit-btn { background: #15803d; color: white; width: 100%; padding: 15px; border-radius: 8px; font-size: 20px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom:10px; }
 
               /* CAPTCHA */
-              .captcha-box { background: white; padding: 30px 20px; text-align: center; font-size: 28px; font-weight: 900; letter-spacing: 8px; border: 3px dashed #333; margin: 20px 0; border-radius: 10px; }
-              .captcha-input { width: 100%; padding: 18px; border: 2px solid #ccc; border-radius: 10px; font-size: 20px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; }
-              .submit-btn { background: #15803d; color: white; width: 100%; padding: 18px; border-radius: 10px; font-size: 22px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom:10px; }
+              .captcha-box { background: white; padding: 30px 20px; text-align: center; font-size: 28px; font-family: 'Courier New', monospace; font-weight: 900; letter-spacing: 8px; border: 2px solid #ccc; margin: 20px 0; border-radius: 8px; }
+              .captcha-input { width: 100%; padding: 15px; border: 2px solid #ccc; border-radius: 8px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline:none; }
+
+              /* PRE-QUIZ MODAL */
+              .pre-quiz-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1001; flex-direction: column; justify-content: center; align-items: center; color: white; text-align:center; }
+              .lang-btn { background: #10b981; color: white; border: none; padding: 15px 30px; border-radius: 25px; font-size: 22px; font-weight: bold; margin: 10px; cursor: pointer; width: 200px; font-family: 'Gidugu', sans-serif; }
+              .timer-spinner { position: relative; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; margin:0 auto; }
+              .circular-loader { position: absolute; width: 100%; height: 100%; border: 5px solid rgba(255,255,255,0.2); border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; }
+              @keyframes spin { to { transform: rotate(360deg); } }
 
               /* QUIZ */
-              .quiz-q { background: white; padding: 25px 20px; border-radius: 10px; font-size: 20px; font-weight: 900; margin: 20px 0; border: 2px solid #ccc; }
-              .quiz-opt { background: white; padding: 18px; border: 2px solid #ccc; border-radius: 10px; margin-bottom: 12px; font-weight: bold; display: flex; gap: 15px; cursor: pointer; font-size: 18px; align-items: center; }
-              .opt-let { font-weight: 900; background: #eee; padding: 5px 12px; border-radius: 5px; }
+              .quiz-q { background: white; padding: 20px; border-radius: 8px; font-size: 18px; font-weight: 900; margin: 20px 0; border: 2px solid #ccc; line-height: 1.4; }
+              .quiz-opt { background: white; padding: 15px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-weight: bold; display: flex; gap: 15px; cursor: pointer; font-size: 16px; align-items: center; }
+              .opt-let { font-weight: 900; background: white; border: 1px solid #ccc; padding: 5px 12px; border-radius: 5px; }
               .quiz-opt.correct { background: #15803d; color: white; border-color: #15803d; }
               .quiz-opt.wrong { background: #ef4444; color: white; border-color: #ef4444; }
-              .quiz-exp { background: #15803d; color: white; padding: 20px; border-radius: 10px; font-weight: bold; display: none; margin-top: 20px; font-size: 18px; }
+              .quiz-exp { background: #15803d; color: white; padding: 15px; border-radius: 8px; font-weight: bold; display: none; margin-top: 15px; font-size: 16px; text-align:center; }
+              .mcq-timer-bar { background: #fee2e2; color: #ef4444; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 10px; display: flex; justify-content: space-between; }
 
               /* PROFILE */
               .pro-section { display: none; animation: fadeIn 0.3s ease; }
               .pro-section.active { display: block; }
-              
               .pro-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-              .pro-name { background: white; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-weight: bold; font-size: 20px; flex-grow: 1; text-align: center; margin: 0 10px; }
-              .icon-btn { background: white; border: 2px solid #ccc; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+              .pro-name { background: white; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; font-size: 18px; flex-grow: 1; text-align: center; margin: 0 10px; }
+              .icon-btn { background: white; border: 1px solid #ccc; width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
               .id-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-              .id-box { background: #15803d; color: white; padding: 12px 20px; border-radius: 8px; font-weight: bold; font-size: 18px; }
-              
-              .pro-wallet { background: #2e1065; color: white; text-align: center; padding: 25px; border-radius: 15px; font-size: 50px; font-weight: 900; margin-bottom: 15px; }
-              .withdraw-btn-main { background: white; border: 2px solid #ccc; padding: 15px; text-align: center; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 20px; width: 70%; margin: 0 auto 20px auto; display: block; color: #000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-              
-              .menu-item { background: white; padding: 18px 20px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 12px; font-weight: 900; font-size: 18px; display: flex; justify-content: space-between; cursor: pointer; }
+              .id-box { background: #15803d; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold; font-size: 16px; }
+              .pro-wallet { background: #2e1065; color: white; text-align: center; padding: 20px; border-radius: 10px; font-size: 45px; font-weight: 900; margin-bottom: 15px; }
+              .withdraw-btn-main { background: white; border: 2px solid #ccc; padding: 12px; text-align: center; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 18px; width: 60%; margin: 0 auto 20px auto; display: block; color: #000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+              .menu-item { background: white; padding: 15px 20px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; cursor: pointer; }
               .social-row { display: flex; justify-content: space-around; margin-top: 20px; }
-              .social-cir { background: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; border: 2px solid #ccc; font-size: 18px; }
-
-              /* WITHDRAWAL FORM */
+              .social-cir { background: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; border: 1px solid #ccc; font-size: 16px; }
               .w-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-              .w-tab { flex: 1; background: white; text-align: center; padding: 15px; border: 2px solid #ccc; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 18px; }
+              .w-tab { flex: 1; background: white; text-align: center; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 16px; }
               .w-tab.active { background: #e5e7eb; }
-              .w-input { width: 100%; padding: 18px; margin-bottom: 12px; border: 2px solid #ccc; border-radius: 8px; font-weight: bold; box-sizing: border-box; font-size: 18px; }
-
-              /* TRANSACTIONS */
-              .tx-box { padding: 18px; border-radius: 8px; border: 2px solid #ccc; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: 900; font-size: 16px; align-items: center; }
+              .w-input { width: 100%; padding: 15px; margin-bottom: 10px; border: 2px solid #ccc; border-radius: 8px; font-weight: bold; box-sizing: border-box; font-size: 16px; outline:none; }
+              .tx-box { padding: 15px; border-radius: 8px; border: 2px solid #ccc; margin-bottom: 10px; display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; align-items: center; }
               .tx-suc { background: #15803d; color: white; border-color: #15803d; }
               .tx-pen { background: #9ca3af; color: white; border-color: #9ca3af; }
-              .tx-amt { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; }
+              .tx-amt { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; font-size:16px;}
 
+              /* CHAT & FEED */
+              .fab-support { position: fixed; bottom: 85px; right: 20px; width: 55px; height: 55px; background: #000; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 950; }
+              .chat-sidebar { position: fixed; top: 0; right: -100%; width: 85%; max-width: 350px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 1100; display: flex; flex-direction: column; transition: right 0.3s ease; }
+              .chat-sidebar.open { right: 0; }
+              .chat-header { background: #000; color: #fff; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 20px; }
+              .chat-close { cursor: pointer; font-size: 20px; }
+              .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; gap: 10px; font-size: 18px; }
+              .chat-msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; line-height: 1.4; font-weight: 600; }
+              .msg-bot { background: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 2px; color: #000; }
+              .msg-user { background: #000; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+              .chat-footer { padding: 10px; background: #fff; border-top: 1px solid #ddd; display: flex; gap: 10px; }
+              .chat-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 16px; }
+              .chat-send { background: #000; color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+              
+              .feed-box { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ccc; font-weight:bold; }
+              
               /* BOTTOM NAV */
-              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 15px 0; border-top: 2px solid #e5e7eb; z-index: 1000; }
-              .nav-icon { width: 55px; height: 55px; background: #f3f4f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26px; cursor: pointer; border: 2px solid #ddd; transition: 0.3s; }
+              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid #e5e7eb; z-index: 900; }
+              .nav-icon { width: 50px; height: 50px; background: #f3f4f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; border: 2px solid #ddd; transition: 0.3s; }
               .nav-icon.active { background: #f59e0b; color: white; border-color: #d97706; transform: scale(1.1); }
             </style>
           </head>
           <body>
 
-            <div class="top-bar">
-              <div class="coin-box">🪙 <span id="mainBal">12.5</span></div>
+            <!-- FAB CHAT -->
+            <div class="fab-support" onclick="toggleChat()">💬</div>
+            <div class="chat-sidebar" id="chatSidebar">
+              <div class="chat-header">
+                <span>AI Support</span><span class="chat-close" onclick="toggleChat()">✖</span>
+              </div>
+              <div class="chat-body" id="chatBody">
+                <div class="chat-msg msg-bot">నమస్కారం! నేను ఎలా సహాయపడగలను?</div>
+              </div>
+              <div class="chat-footer">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Type message..." onkeypress="if(event.key==='Enter') sendChat()"/>
+                <button class="chat-send" onclick="sendChat()">➤</button>
+              </div>
             </div>
 
-            <!-- HOME TAB -->
+            <!-- PRE-QUIZ MODAL -->
+            <div class="pre-quiz-modal" id="preQuizModal">
+              <div id="langSelector">
+                <h2 style="margin-bottom:30px;">Select Language / భాషను ఎంచుకోండి</h2>
+                <button class="lang-btn" onclick="startQuizTimer('en')">English</button><br/>
+                <button class="lang-btn" onclick="startQuizTimer('te')">తెలుగు</button><br/><br/>
+                <span style="font-size:20px; color:#aaa; cursor:pointer;" onclick="document.getElementById('preQuizModal').style.display='none'">✖ Cancel</span>
+              </div>
+              <div id="spinnerContainer" style="display:none;">
+                <h3 id="spinnerText">Loading Quiz...</h3>
+                <div class="timer-spinner">
+                  <div class="circular-loader"></div>
+                  <div style="font-size:30px; font-weight:bold;" id="spinnerNum">5</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TABS -->
             <div id="tab-home" class="tab-content active">
+              <div class="top-bar"><div class="coin-box">🪙 <span class="bal-txt">12.5</span></div></div>
               <div class="daily-claim-box">
-                <div class="days-row" id="daysRow">
+                <div class="days-row">
                   <div class="day-box">1</div><div class="day-box">2</div><div class="day-box">3</div>
                   <div class="day-box">4</div><div class="day-box">5</div><div class="day-box">6</div><div class="day-box">7</div>
                 </div>
                 <button class="claim-btn" onclick="claimDaily()">CLAIM NOW</button>
               </div>
               <div class="task-card">
-                <div class="task-num">1</div><div class="task-title">Solve Captcha</div>
-                <div class="start-btn" onclick="openCaptcha()">▶ START</div>
+                <div class="task-num">1</div><div class="task-title">Captcha Entry</div>
+                <div class="start-btn" onclick="nav('captcha'); genCap();">▶ START</div>
               </div>
               <div class="task-card">
-                <div class="task-num">2</div><div class="task-title">Play Quiz</div>
-                <div class="start-btn" onclick="openQuiz()">▶ START</div>
+                <div class="task-num">2</div><div class="task-title">MCQ Test</div>
+                <div class="start-btn" onclick="document.getElementById('preQuizModal').style.display='flex'; document.getElementById('langSelector').style.display='block'; document.getElementById('spinnerContainer').style.display='none';">▶ START</div>
               </div>
             </div>
 
             <!-- CAPTCHA TAB -->
             <div id="tab-captcha" class="tab-content">
+              <div class="page-top-bar">
+                <div class="door-btn" onclick="nav('home')">🚪</div>
+                <div class="page-title">CAPTCHA</div>
+                <div class="coin-box" style="padding:2px 10px; font-size:16px;">🪙 <span class="bal-txt">12.5</span></div>
+              </div>
               <div class="captcha-box" id="capText">A7X9P</div>
               <input type="text" class="captcha-input" id="capInput" placeholder="CAPTCHA TEXT ENTER BOX">
               <button class="submit-btn" onclick="submitCaptcha()">SUBMIT</button>
-              <button class="submit-btn" style="background:#6b7280;" onclick="nav('home')">BACK TO HOME</button>
             </div>
 
             <!-- QUIZ TAB -->
             <div id="tab-quiz" class="tab-content">
+              <div class="page-top-bar">
+                <div class="door-btn" onclick="closeQuiz()">🚪</div>
+                <div class="page-title">QUIZ</div>
+                <div class="coin-box" style="padding:2px 10px; font-size:16px;">🪙 <span class="bal-txt">12.5</span></div>
+              </div>
+              <div class="mcq-timer-bar"><span>⏱ Time Left:</span><span id="qTimerDisplay">15s</span></div>
+              <div class="task-num" style="position:relative; margin-bottom:10px; top:0; left:0; width:30px;height:30px;font-size:16px;" id="qNum">1</div>
               <div class="quiz-q" id="qText">QUESTION TEXT HERE</div>
               <div id="opts"></div>
               <div class="quiz-exp" id="qExp"></div>
-              <button class="submit-btn" style="background:#6b7280; margin-top:20px;" onclick="nav('home')">EXIT QUIZ</button>
             </div>
 
-            <!-- PROFILE TAB (Contains 3 sections) -->
+            <!-- FEED TAB -->
+            <div id="tab-feed" class="tab-content">
+              <div class="top-bar"><div class="coin-box">🪙 <span class="bal-txt">12.5</span></div></div>
+              <h2 style="text-align:center; color:#2e1065;">News Feed / Videos</h2>
+              <div class="feed-box" onclick="playAd()">▶ Watch Ad for Coins (Click Here)</div>
+              <div class="feed-box">📰 Today Latest News (Telugu)</div>
+              <div class="feed-box">🍿 Movies Updates</div>
+            </div>
+
+            <!-- PROFILE TAB -->
             <div id="tab-profile" class="tab-content">
-              
-              <!-- 1. MAIN PROFILE -->
+              <!-- MAIN PROFILE -->
               <div id="sec-pro-main" class="pro-section active">
                 <div class="pro-header">
                   <div class="icon-btn">👤</div><div class="pro-name">VIKASH RAJU</div><div class="icon-btn">📞</div>
@@ -206,9 +277,9 @@ jobs:
                   <div class="id-box">ID : 381130</div><div class="id-box" style="cursor:pointer;" onclick="alert('Copied!')">COPY</div>
                 </div>
                 <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
-                <div class="withdraw-btn-main" onclick="openWithdraw()">WITHDRAWAL</div>
+                <div class="withdraw-btn-main" onclick="showProSec('sec-pro-withdraw')">WITHDRAWAL</div>
 
-                <div class="menu-item" onclick="alert('Change Password')">CHANGE PASSWORD</div>
+                <div class="menu-item">CHANGE PASSWORD</div>
                 <div class="menu-item">ABOUT US <span>➜</span></div>
                 <div class="menu-item">PRIVACY POLICY <span>➜</span></div>
                 <div class="menu-item">TERM AND CONDITION <span>➜</span></div>
@@ -218,7 +289,7 @@ jobs:
                 </div>
               </div>
 
-              <!-- 2. WITHDRAW FORM -->
+              <!-- WITHDRAW FORM -->
               <div id="sec-pro-withdraw" class="pro-section">
                 <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
                 <div class="withdraw-btn-main">WITHDRAWAL</div>
@@ -234,71 +305,60 @@ jobs:
                   <input type="number" class="w-input" placeholder="ACCOUNT NUMBER">
                   <input type="text" class="w-input" placeholder="IFSC CODE">
                 </div>
-                
                 <div id="w-form-upi" style="display:none;">
                   <input type="text" class="w-input" placeholder="ACCOUNT HOLDER NAME">
                   <input type="text" class="w-input" placeholder="UPI ID">
                 </div>
-                
-                <input type="number" class="w-input" placeholder="Amount (e.g. 12.50)" style="border-color:#2e1065; margin-top:10px;">
+                <input type="number" class="w-input" placeholder="Amount (e.g. 12.50)">
                 
                 <button class="submit-btn" style="background:#2e1065;" onclick="alert('Request Sent!')">WITHDRAW</button>
-                <div class="withdraw-btn-main" style="width:100%; border:none; box-shadow:0 0 8px #ccc;" onclick="openTx()">RECENT TRANSACTIONS</div>
+                <div class="withdraw-btn-main" style="width:100%; border:none; box-shadow:0 0 5px #ccc;" onclick="showProSec('sec-pro-tx')">RECENT TRANSACTIONS</div>
                 <button class="submit-btn" style="background:#6b7280;" onclick="showProSec('sec-pro-main')">BACK</button>
               </div>
 
-              <!-- 3. TRANSACTIONS -->
+              <!-- TRANSACTIONS -->
               <div id="sec-pro-tx" class="pro-section">
                 <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
                 <div class="withdraw-btn-main">WITHDRAWAL</div>
-                <div class="withdraw-btn-main" style="width:100%; border:none; box-shadow:0 0 8px #ccc;">RECENT TRANSACTIONS</div>
+                <div class="withdraw-btn-main" style="width:100%; border:none; box-shadow:0 0 5px #ccc;">RECENT TRANSACTIONS</div>
 
-                <div class="tx-box tx-pen">WITHDRAWAL PENDING <span class="tx-amt">🪙 12.5</span></div>
+                <div class="tx-box tx-pen">WITHDRAWAL REQUEST PENDING <span class="tx-amt">🪙 12.5</span></div>
                 <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 60</span></div>
                 <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 147</span></div>
                 <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 134</span></div>
                 
-                <button class="submit-btn" style="background:#6b7280; margin-top:15px;" onclick="openWithdraw()">BACK TO WITHDRAW</button>
+                <button class="submit-btn" style="background:#6b7280; margin-top:15px;" onclick="showProSec('sec-pro-withdraw')">BACK</button>
               </div>
             </div>
 
             <!-- BOTTOM NAV -->
             <div class="bottom-nav">
               <div class="nav-icon active" id="nav-home" onclick="nav('home')">🏠</div>
-              <div class="nav-icon" id="nav-ad" onclick="nav('ad')">▶</div>
+              <div class="nav-icon" id="nav-feed" onclick="nav('feed')">▶</div>
               <div class="nav-icon" id="nav-profile" onclick="nav('profile')">👤</div>
             </div>
 
             <script>
               let bal = 12.5; let claimed = false;
               function updateBal() {
-                document.getElementById('mainBal').innerText = bal.toFixed(1);
                 document.querySelectorAll('.bal-txt').forEach(el => el.innerText = bal.toFixed(1));
               }
 
-              // TAB NAVIGATION
               function nav(tab) {
-                if(tab === 'ad') {
-                  if(typeof AndroidApp !== 'undefined') AndroidApp.showUnityAd('Rewarded_Android');
-                  else alert("Ads will play in real App!");
-                  return;
-                }
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
-                document.getElementById('tab-' + tab).classList.add('active');
-                document.getElementById('nav-' + tab).classList.add('active');
                 
-                // Reset Profile to main view when clicked
+                if(tab !== 'captcha' && tab !== 'quiz') {
+                  document.getElementById('nav-' + tab).classList.add('active');
+                }
+                document.getElementById('tab-' + tab).classList.add('active');
                 if(tab === 'profile') showProSec('sec-pro-main');
               }
 
-              // PROFILE NAVIGATION
               function showProSec(id) {
                 document.querySelectorAll('.pro-section').forEach(el => el.classList.remove('active'));
                 document.getElementById(id).classList.add('active');
               }
-              function openWithdraw() { showProSec('sec-pro-withdraw'); }
-              function openTx() { showProSec('sec-pro-tx'); }
               function selW(type) {
                 document.getElementById('tabBank').classList.remove('active');
                 document.getElementById('tabUpi').classList.remove('active');
@@ -313,9 +373,13 @@ jobs:
                 }
               }
 
-              // DAILY CLAIM
+              function playAd() {
+                if(typeof AndroidApp !== 'undefined') AndroidApp.showUnityAd('Rewarded_Android');
+                else alert("Unity Ad will play in actual APK!");
+              }
+
               function claimDaily() {
-                if(claimed) { alert("Already claimed!"); return; }
+                if(claimed) { alert("Already claimed today!"); return; }
                 bal += 5.0; updateBal(); claimed = true;
                 document.querySelectorAll('.day-box')[0].classList.add('claimed');
                 alert("Claimed +5 Coins!");
@@ -329,46 +393,101 @@ jobs:
                 document.getElementById('capText').innerText = curCap;
                 document.getElementById('capInput').value = "";
               }
-              function openCaptcha() { nav('captcha'); genCap(); }
               function submitCaptcha() {
                 if(document.getElementById('capInput').value.trim().toUpperCase() === curCap) {
-                  bal += 1.5; updateBal(); alert("Correct! +1.5 Coins"); nav('home');
+                  bal += 1.5; updateBal(); alert("Correct! +1.5 Coins"); genCap();
                 } else { alert("Wrong!"); genCap(); }
               }
 
-              // QUIZ
-              const qData = { q: "Which city is known as Pink City?", o: ["Jaipur", "Mumbai", "Delhi", "Agra"], a: 0, e: "Jaipur is famously known as the Pink City of India." };
-              function openQuiz() {
-                nav('quiz');
-                document.getElementById('qText').innerText = qData.q;
-                document.getElementById('qExp').style.display = 'none';
-                let oHtml = "";
-                const lets = ["A", "B", "C", "D"];
-                qData.o.forEach((opt, i) => {
-                  oHtml += `<div class="quiz-opt" id="qo_${i}" onclick="checkQ(${i})"><span class="opt-let">${lets[i]}</span> ${opt}</div>`;
-                });
-                document.getElementById('opts').innerHTML = oHtml;
+              // QUIZ LOGIC (Timer + Native Lang)
+              const qTE = [{q:"తాజ్ మహల్‌ను నిర్మించిన మొఘల్ చక్రవర్తి ఎవరు?", o:["అక్బర్", "జహంగీర్", "షాజహాన్", "ఔరంగజేబు"], a:2, e:"షాజహాన్ తన భార్య ముంతాజ్ జ్ఞాపకార్థం నిర్మించాడు."}];
+              const qEN = [{q:"Who built the Taj Mahal?", o:["Akbar", "Jahangir", "Shah Jahan", "Aurangzeb"], a:2, e:"Shah Jahan built it for Mumtaz."}];
+              let curQList = []; let qIdx = 0; let qTimer; let timeLeft = 15; let isAns = false;
+
+              function startQuizTimer(lang) {
+                document.getElementById('langSelector').style.display = 'none';
+                document.getElementById('spinnerContainer').style.display = 'block';
+                curQList = lang === 'te' ? qTE : qEN;
+                document.getElementById('spinnerText').innerText = lang === 'te' ? "క్విజ్ లోడ్ అవుతోంది..." : "Loading Quiz...";
+                let cnt = 3;
+                document.getElementById('spinnerNum').innerText = cnt;
+                let sInt = setInterval(() => {
+                  cnt--; document.getElementById('spinnerNum').innerText = cnt;
+                  if(cnt <= 0) {
+                    clearInterval(sInt);
+                    document.getElementById('preQuizModal').style.display = 'none';
+                    nav('quiz'); qIdx = 0; loadQ();
+                  }
+                }, 1000);
               }
+
+              function loadQ() {
+                clearInterval(qTimer); isAns = false;
+                document.getElementById('qExp').style.display = 'none';
+                if(qIdx >= curQList.length) { document.getElementById('qText').innerText="Completed!"; document.getElementById('opts').innerHTML=""; return; }
+                const qd = curQList[qIdx];
+                document.getElementById('qNum').innerText = qIdx+1;
+                document.getElementById('qText').innerText = qd.q;
+                let oHtml = ""; const lets = ["A", "B", "C", "D"];
+                qd.o.forEach((opt, i) => { oHtml += `<div class="quiz-opt" id="qo_${i}" onclick="checkQ(${i})"><span class="opt-let">${lets[i]}</span> ${opt}</div>`; });
+                document.getElementById('opts').innerHTML = oHtml;
+                timeLeft = 15; document.getElementById('qTimerDisplay').innerText = timeLeft + "s";
+                qTimer = setInterval(() => {
+                  timeLeft--; document.getElementById('qTimerDisplay').innerText = timeLeft + "s";
+                  if(timeLeft <= 0) { clearInterval(qTimer); timeOut(); }
+                }, 1000);
+              }
+
               function checkQ(idx) {
-                document.getElementById('qo_'+qData.a).classList.add('correct');
-                if(idx === qData.a) {
+                if(isAns) return; isAns = true; clearInterval(qTimer);
+                const qd = curQList[qIdx];
+                document.getElementById('qo_'+qd.a).classList.add('correct');
+                if(idx === qd.a) {
                   bal += 2.0; updateBal();
-                  document.getElementById('qExp').innerHTML = `✓ CORRECT ANSER!<br>${qData.e}`;
+                  document.getElementById('qExp').innerHTML = `✓ CORRECT ANSER!<br>${qd.e}`;
                   document.getElementById('qExp').style.display = 'block';
-                  setTimeout(()=> { nav('home'); }, 2000);
                 } else {
                   document.getElementById('qo_'+idx).classList.add('wrong');
-                  document.getElementById('qExp').innerHTML = `<span style="color:#ffb3b3;">⬟ WRONG ANSER</span><br>${qData.e}`;
+                  document.getElementById('qExp').innerHTML = `<div style="background:white; color:red; display:inline-block; padding:2px 10px; border-radius:5px; margin-bottom:5px;">⬟ WRONG ANSER</div><br>${qd.e}`;
                   document.getElementById('qExp').style.display = 'block';
-                  setTimeout(()=> { nav('home'); }, 3000);
                 }
+                setTimeout(()=> { qIdx++; loadQ(); }, 3000);
+              }
+
+              function timeOut() {
+                isAns = true; const qd = curQList[qIdx];
+                document.getElementById('qo_'+qd.a).classList.add('correct');
+                document.getElementById('qExp').innerHTML = `<div style="background:white; color:red; display:inline-block; padding:2px 10px; border-radius:5px; margin-bottom:5px;">⏱ TIME OUT!</div><br>${qd.e}`;
+                document.getElementById('qExp').style.display = 'block';
+                setTimeout(()=> { qIdx++; loadQ(); }, 3000);
+              }
+              function closeQuiz() { clearInterval(qTimer); nav('home'); }
+
+              // CHAT LOGIC
+              const GEMINI_API_KEY = "AQ.Ab8RN6IuKcYf-ZBpxpRVLPKYeylW8rp5u65T4tPzvbX9TowPFA";
+              function toggleChat() { document.getElementById('chatSidebar').classList.toggle('open'); }
+              async function sendChat() {
+                const inp = document.getElementById('chatInput'); const msg = inp.value.trim(); if(!msg) return;
+                appendMsg(msg, 'user'); inp.value = ''; const lId = appendMsg('...', 'bot');
+                try {
+                  const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=" + GEMINI_API_KEY, {
+                    method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({contents:[{role:"user",parts:[{text:msg}]}]})
+                  });
+                  const d = await r.json(); document.getElementById(lId).remove();
+                  appendMsg(d.candidates[0].content.parts[0].text, 'bot');
+                } catch(e) { document.getElementById(lId).remove(); appendMsg("Error connection", 'bot'); }
+              }
+              function appendMsg(text, type) {
+                const b = document.getElementById('chatBody'); const d = document.createElement('div');
+                const id = 'm_'+Date.now(); d.id = id; d.className = 'chat-msg msg-'+type; d.innerText = text;
+                b.appendChild(d); b.scrollTop = b.scrollHeight; return id;
               }
             </script>
           </body>
           </html>
           EOF
 
-          # LAYOUT WITH SPLASH SCREEN OVERLAY
+          # LAYOUT (SPLASH VIDEO OVERLAY)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -474,7 +593,7 @@ jobs:
                       mp.setLooping(false);
                       mp.setOnInfoListener((mp1, what, extra) -> {
                           if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-                              splashLogo.setVisibility(View.GONE); // Hide Logo when video starts
+                              splashLogo.setVisibility(View.GONE);
                               return true;
                           }
                           return false;
@@ -482,7 +601,6 @@ jobs:
                       splashVideo.start();
                   });
                   
-                  // When Video Ends -> Hide Splash, Show App
                   splashVideo.setOnCompletionListener(mp -> {
                       splashVideo.setVisibility(View.GONE);
                       splashLogo.setVisibility(View.GONE);
@@ -519,12 +637,12 @@ jobs:
                                       @Override public void onUnityAdsShowStart(String placementId) {}
                                       @Override public void onUnityAdsShowClick(String placementId) {}
                                       @Override public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
-                                          Toast.makeText(mContext, "Coins Added!", Toast.LENGTH_SHORT).show();
+                                          Toast.makeText(mContext, "Reward Added!", Toast.LENGTH_SHORT).show();
                                       }
                                   });
                               }
                               @Override public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
-                                  Toast.makeText(mContext, "Ad Failed to Load", Toast.LENGTH_SHORT).show();
+                                  Toast.makeText(mContext, "Ad loading failed", Toast.LENGTH_SHORT).show();
                               }
                           });
                       });
@@ -539,5 +657,5 @@ jobs:
       - name: Upload Pro APK
         uses: actions/upload-artifact@v4
         with:
-          name: EARNZIO-PRO-APK
+          name: EARNZIO-ULTIMATE-APK
           path: app/build/outputs/apk/debug/app-debug.apk
