@@ -1,4 +1,4 @@
-name: Build EARNZIO APK
+name: Build Earnzio Standalone APK
 
 on:
   workflow_dispatch: 
@@ -16,11 +16,9 @@ jobs:
       - name: Create Android App Code
         run: |
           mkdir -p app/src/main/java/com/earnzio/app
-          mkdir -p app/src/main/res/xml
           mkdir -p app/src/main/res/values
-          mkdir -p app/src/main/res/drawable
-          mkdir -p app/src/main/res/raw
           mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/assets
           
           echo "include ':app'" > settings.gradle
           
@@ -58,33 +56,245 @@ jobs:
           }
           dependencies {
               implementation 'androidx.appcompat:appcompat:1.6.1'
-              implementation 'androidx.core:core:1.9.0'
+              implementation 'com.unity3d.ads:unity-ads:4.12.0'
           }
           EOF
 
-          # APP ICON
-          wget -O app/src/main/res/drawable/app_icon.png "https://res.cloudinary.com/ixxjuj5g/image/upload/v1790382703/20260926_003238.jpg"
+          # ==========================================
+          # 100% OFFLINE HTML + CSS + JS (NO WEB LINKS)
+          # ==========================================
+          cat << 'EOF' > app/src/main/assets/index.html
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+            <title>Earnzio Offline</title>
+            <style>
+              /* CSS MOTHAM IKKADE UNDI */
+              @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
+              
+              body { 
+                margin: 0; padding: 0; font-family: 'Roboto', sans-serif;
+                background: linear-gradient(135deg, #e6e9ff 0%, #b8c6ff 50%, #859aff 100%);
+                background-attachment: fixed;
+                color: #000; padding-bottom: 80px;
+                user-select: none; -webkit-user-select: none;
+              }
+              
+              .top-bar { display: flex; justify-content: flex-end; padding: 15px; }
+              .coin-box { background: white; padding: 8px 18px; border-radius: 8px; border: 2px solid #ddd; font-weight: bold; font-size: 22px; color: #15803d; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+              
+              .tab-content { display: none; padding: 10px; animation: fadeIn 0.3s ease; }
+              .tab-content.active { display: block; }
+              @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-          # SPLASH VIDEO 
-          wget -O app/src/main/res/raw/splash_video.mp4 "https://res.cloudinary.com/ixxjuj5g/video/upload/v1790382792/InShot_20260926_054447616.mp4"
+              /* HOME */
+              .daily-claim-box { background: rgba(255,255,255,0.8); border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+              .days-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+              .day-box { background: white; border: 2px solid #333; border-radius: 8px; width: 12%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
+              .day-box.claimed { background: #15803d; color: white; border-color: #15803d; }
+              .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 22px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s; }
+              .claim-btn:active { transform: scale(0.95); }
 
-          # FILE PROVIDER
-          cat << 'EOF' > app/src/main/res/xml/file_paths.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <paths>
-              <cache-path name="shared_media" path="media/"/>
-          </paths>
+              .task-card { background: rgba(255,255,255,0.7); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+              .task-num { position: absolute; top: 15px; left: 15px; background: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; border: 2px solid #333; font-size: 20px; }
+              .task-title { font-size: 24px; font-weight: 900; margin: 20px 0 10px 0; color: #2e1065; }
+              .start-btn { background: white; border: 2px solid #ddd; padding: 12px 35px; border-radius: 8px; font-size: 24px; font-weight: 900; color: #15803d; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; }
+              
+              /* CAPTCHA */
+              .captcha-box { background: white; padding: 30px 20px; text-align: center; font-size: 28px; font-weight: 900; letter-spacing: 8px; border: 3px dashed #333; margin: 20px 0; border-radius: 10px; user-select: none; }
+              .captcha-input { width: 100%; padding: 18px; border: 2px solid #ccc; border-radius: 10px; font-size: 20px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline: none; }
+              .captcha-input:focus { border-color: #15803d; }
+              .submit-btn { background: #15803d; color: white; width: 100%; padding: 18px; border-radius: 10px; font-size: 22px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+
+              /* QUIZ */
+              .quiz-q { background: white; padding: 25px 20px; border-radius: 10px; font-size: 20px; font-weight: 900; margin: 20px 0; border: 2px solid #ccc; line-height: 1.4; }
+              .quiz-opt { background: white; padding: 18px; border: 2px solid #ccc; border-radius: 10px; margin-bottom: 12px; font-weight: bold; display: flex; gap: 15px; cursor: pointer; font-size: 18px; align-items: center; transition: 0.2s; }
+              .opt-let { font-weight: 900; background: #eee; padding: 5px 12px; border-radius: 5px; }
+              .quiz-opt.correct { background: #15803d; color: white; border-color: #15803d; }
+              .quiz-opt.correct .opt-let { color: #000; }
+              .quiz-opt.wrong { background: #ef4444; color: white; border-color: #ef4444; }
+              .quiz-opt.wrong .opt-let { color: #000; }
+              .quiz-exp { background: #15803d; color: white; padding: 20px; border-radius: 10px; font-weight: bold; display: none; margin-top: 20px; font-size: 18px; line-height: 1.5; }
+
+              /* BOTTOM NAV */
+              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 15px 0; border-top: 2px solid #e5e7eb; z-index: 1000; }
+              .nav-icon { width: 55px; height: 55px; background: #f3f4f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26px; cursor: pointer; border: 2px solid #ddd; transition: 0.3s; }
+              .nav-icon.active { background: #f59e0b; color: white; border-color: #d97706; transform: scale(1.1); }
+            </style>
+          </head>
+          <body>
+
+            <div class="top-bar">
+              <div class="coin-box">🪙 <span id="mainBal">12.5</span></div>
+            </div>
+
+            <!-- HOME TAB -->
+            <div id="tab-home" class="tab-content active">
+              <div class="daily-claim-box">
+                <div class="days-row" id="daysRow">
+                  <div class="day-box">1</div><div class="day-box">2</div><div class="day-box">3</div>
+                  <div class="day-box">4</div><div class="day-box">5</div><div class="day-box">6</div><div class="day-box">7</div>
+                </div>
+                <button class="claim-btn" onclick="claimDaily()">CLAIM NOW</button>
+              </div>
+
+              <div class="task-card">
+                <div class="task-num">1</div>
+                <div class="task-title">Solve Captcha</div>
+                <div class="start-btn" onclick="openCaptcha()">▶ START</div>
+              </div>
+              <div class="task-card">
+                <div class="task-num">2</div>
+                <div class="task-title">Play Quiz</div>
+                <div class="start-btn" onclick="openQuiz()">▶ START</div>
+              </div>
+            </div>
+
+            <!-- CAPTCHA TAB -->
+            <div id="tab-captcha" class="tab-content">
+              <h2 style="text-align:center;">Solve Captcha</h2>
+              <div class="captcha-box" id="capText">A7X9P</div>
+              <input type="text" class="captcha-input" id="capInput" placeholder="Enter text here">
+              <button class="submit-btn" onclick="submitCaptcha()">SUBMIT CAPTCHA</button>
+              <button class="submit-btn" style="background:#6b7280; margin-top:15px;" onclick="nav('home')">BACK TO HOME</button>
+            </div>
+
+            <!-- QUIZ TAB -->
+            <div id="tab-quiz" class="tab-content">
+              <h2 style="text-align:center;">GK Quiz</h2>
+              <div class="quiz-q" id="qText">Loading Question...</div>
+              <div id="opts"></div>
+              <div class="quiz-exp" id="qExp"></div>
+              <button class="submit-btn" style="background:#6b7280; margin-top:20px;" onclick="nav('home')">EXIT QUIZ</button>
+            </div>
+
+            <!-- BOTTOM NAV -->
+            <div class="bottom-nav">
+              <div class="nav-icon active" id="nav-home" onclick="nav('home')">🏠</div>
+              <div class="nav-icon" id="nav-ad" onclick="nav('ad')">📺</div>
+              <div class="nav-icon" id="nav-profile" onclick="alert('Profile Coming Soon!')">👤</div>
+            </div>
+
+            <script>
+              // JAVASCRIPT LOGIC
+              let bal = 12.5;
+              let dailyClaimed = false;
+
+              function updateBal() {
+                document.getElementById('mainBal').innerText = bal.toFixed(1);
+              }
+
+              // Navigation
+              function nav(tab) {
+                if(tab === 'ad') {
+                  // Direct call to Android Native Code for Unity Ads
+                  if(typeof AndroidApp !== 'undefined') {
+                    AndroidApp.showUnityAd('Rewarded_Android');
+                  } else {
+                    alert("Ads will play in the APK version!");
+                  }
+                  return;
+                }
+                
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
+                
+                if(tab === 'home' || tab === 'captcha' || tab === 'quiz') {
+                  document.getElementById('tab-' + tab).classList.add('active');
+                }
+                if(tab === 'home') document.getElementById('nav-home').classList.add('active');
+              }
+
+              // Daily Claim
+              function claimDaily() {
+                if(dailyClaimed) {
+                  alert("You have already claimed today's bonus!");
+                  return;
+                }
+                bal += 5.0; 
+                updateBal(); 
+                dailyClaimed = true;
+                document.querySelectorAll('.day-box')[0].classList.add('claimed');
+                alert("Daily Bonus Claimed! +5.0 Coins");
+              }
+
+              // Captcha
+              let curCap = "";
+              function genCap() {
+                const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; 
+                curCap = "";
+                for(let i=0; i<6; i++) curCap += c.charAt(Math.floor(Math.random()*c.length));
+                document.getElementById('capText').innerText = curCap;
+                document.getElementById('capInput').value = "";
+              }
+              function openCaptcha() { 
+                nav('captcha'); 
+                genCap(); 
+              }
+              function submitCaptcha() {
+                let input = document.getElementById('capInput').value.trim().toUpperCase();
+                if(input === curCap) {
+                  bal += 1.5; 
+                  updateBal(); 
+                  alert("Correct! +1.5 Coins added."); 
+                  nav('home');
+                } else { 
+                  alert("Wrong Captcha! Try again."); 
+                  genCap(); 
+                }
+              }
+
+              // Quiz
+              const qData = { 
+                q: "What is the capital of India?", 
+                o: ["Mumbai", "New Delhi", "Chennai", "Kolkata"], 
+                a: 1, 
+                e: "New Delhi is the capital of India." 
+              };
+              
+              function openQuiz() {
+                nav('quiz');
+                document.getElementById('qText').innerText = qData.q;
+                document.getElementById('qExp').style.display = 'none';
+                let oHtml = "";
+                const lets = ["A", "B", "C", "D"];
+                qData.o.forEach((opt, i) => {
+                  oHtml += `<div class="quiz-opt" id="qo_${i}" onclick="checkQ(${i})"><span class="opt-let">${lets[i]}</span> ${opt}</div>`;
+                });
+                document.getElementById('opts').innerHTML = oHtml;
+              }
+              
+              function checkQ(idx) {
+                document.getElementById('qo_'+qData.a).classList.add('correct');
+                if(idx === qData.a) {
+                  bal += 2.0; 
+                  updateBal();
+                  document.getElementById('qExp').innerHTML = `✓ CORRECT!<br>${qData.e}`;
+                  document.getElementById('qExp').style.display = 'block';
+                  setTimeout(()=> { nav('home'); }, 2000);
+                } else {
+                  document.getElementById('qo_'+idx).classList.add('wrong');
+                  document.getElementById('qExp').innerHTML = `<span style="color:#ffb3b3;">✗ WRONG ANSWER</span><br>${qData.e}`;
+                  document.getElementById('qExp').style.display = 'block';
+                  setTimeout(()=> { nav('home'); }, 3000);
+                }
+              }
+            </script>
+          </body>
+          </html>
           EOF
-          
-          # THEME
+          # ==========================================
+
+          # THEME (No Action Bar, Light Status Bar)
           cat << 'EOF' > app/src/main/res/values/styles.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
               <style name="Theme.App" parent="Theme.AppCompat.Light.NoActionBar">
                   <item name="android:windowBackground">@android:color/white</item>
-                  <item name="android:statusBarColor">#ffffff</item>
+                  <item name="android:statusBarColor">#e6e9ff</item>
                   <item name="android:windowLightStatusBar">true</item>
-                  <item name="android:navigationBarColor">#ffffff</item>
               </style>
           </resources>
           EOF
@@ -93,362 +303,103 @@ jobs:
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <!-- INTERNET is only used for Unity Ads -->
               <uses-permission android:name="android.permission.INTERNET" />
-              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-              <uses-permission android:name="android.permission.READ_PHONE_STATE" /> 
-              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-              <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-              <uses-permission android:name="android.permission.WAKE_LOCK" />
+              <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
               
-              <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:requestLegacyExternalStorage="true" android:usesCleartextTraffic="true" android:hardwareAccelerated="true">
-                  <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|keyboardHidden|screenSize">
+              <application android:label="Earnzio" android:theme="@style/Theme.App" android:usesCleartextTraffic="true">
+                  <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
                   </activity>
-                  
-                  <provider
-                      android:name="androidx.core.content.FileProvider"
-                      android:authorities="com.earnzio.app.fileprovider"
-                      android:exported="false"
-                      android:grantUriPermissions="true">
-                      <meta-data
-                          android:name="android.support.FILE_PROVIDER_PATHS"
-                          android:resource="@xml/file_paths" />
-                  </provider>
-
-                  <receiver android:name=".AlarmReceiver" android:exported="false" />
               </application>
           </manifest>
           EOF
 
-          # ALARM RECEIVER
-          cat << 'EOF' > app/src/main/java/com/earnzio/app/AlarmReceiver.java
-          package com.earnzio.app;
-          
-          import android.app.NotificationChannel;
-          import android.app.NotificationManager;
-          import android.app.PendingIntent;
-          import android.content.BroadcastReceiver;
-          import android.content.Context;
-          import android.content.Intent;
-          import android.os.Build;
-          import androidx.core.app.NotificationCompat;
-
-          public class AlarmReceiver extends BroadcastReceiver {
-              @Override
-              public void onReceive(Context context, Intent intent) {
-                  NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                      NotificationChannel channel = new NotificationChannel("EARNZIO_ALERTS", "Earnzio Alerts", NotificationManager.IMPORTANCE_HIGH);
-                      nm.createNotificationChannel(channel);
-                  }
-                  Intent i = new Intent(context, MainActivity.class);
-                  i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                  PendingIntent pi = PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_IMMUTABLE);
-                  
-                  NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "EARNZIO_ALERTS")
-                          .setSmallIcon(android.R.drawable.ic_dialog_info)
-                          .setContentTitle("Daily Earnings waiting! 💰")
-                          .setContentText("Open the app now to claim your daily coins!")
-                          .setAutoCancel(true)
-                          .setContentIntent(pi)
-                          .setPriority(NotificationCompat.PRIORITY_HIGH)
-                          .setDefaults(NotificationCompat.DEFAULT_ALL);
-                          
-                  nm.notify(101, builder.build());
-              }
-          }
-          EOF
-
-          # MAIN ACTIVITY LAYOUT (XML)
-          cat << 'EOF' > app/src/main/res/layout/activity_main.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="#ffffff">
-
-              <WebView
-                  android:id="@+id/webView"
-                  android:layout_width="match_parent"
-                  android:layout_height="match_parent"
-                  android:visibility="gone" />
-
-              <VideoView
-                  android:id="@+id/videoView"
-                  android:layout_width="match_parent"
-                  android:layout_height="match_parent"
-                  android:layout_gravity="center" />
-
-              <ImageView
-                  android:id="@+id/splashPlaceholder"
-                  android:layout_width="match_parent"
-                  android:layout_height="match_parent"
-                  android:background="#ffffff" />
-
-          </FrameLayout>
-          EOF
-          
-          # MAIN ACTIVITY JAVA CODE - Updated URL Override Logic for Ads
+          # MAIN ACTIVITY - LOADS ONLY LOCAL OFFLINE ASSETS
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
-          import android.Manifest;
-          import android.annotation.SuppressLint;
           import android.app.Activity;
-          import android.app.AlarmManager;
-          import android.app.PendingIntent;
           import android.content.Context;
-          import android.content.Intent;
-          import android.graphics.Color;
-          import android.media.MediaPlayer;
-          import android.net.ConnectivityManager;
-          import android.net.NetworkInfo;
-          import android.net.Uri;
-          import android.os.Build;
           import android.os.Bundle;
-          import android.provider.Settings;
-          import android.view.View;
-          import android.view.Window;
-          import android.view.WindowManager;
-          import android.webkit.CookieManager;
           import android.webkit.JavascriptInterface;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebResourceError;
-          import android.webkit.WebResourceRequest;
           import android.webkit.WebSettings;
           import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-          import android.widget.ImageView;
           import android.widget.Toast;
-          import android.widget.VideoView;
           import androidx.appcompat.app.AppCompatActivity;
-          import java.util.Calendar;
+          import com.unity3d.ads.IUnityAdsInitializationListener;
+          import com.unity3d.ads.IUnityAdsLoadListener;
+          import com.unity3d.ads.IUnityAdsShowListener;
+          import com.unity3d.ads.UnityAds;
+          import com.unity3d.ads.UnityAdsShowOptions;
 
           public class MainActivity extends AppCompatActivity {
-              private WebAppInterface webAppInterface;
               private WebView webView;
-              private VideoView videoView;
-              private ImageView splashPlaceholder;
+              private String unityGameID = "YOUR_UNITY_GAME_ID_HERE"; 
               
-              private boolean isNetworkAvailable() {
-                  ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                  if (cm != null) {
-                      NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-                      return activeNetwork != null && activeNetwork.isConnected();
-                  }
-                  return false;
-              }
-
-              private void showOfflinePage(WebView view) {
-                  String customErrorPage = "<html><body style=\"display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; margin:0; font-family:sans-serif; background-color:#ffffff; color:#002A5C; text-align:center;\"><h2 style=\"font-weight:900; font-size:24px; padding:20px;\">PLEASE CONNECT YOUR INTERNET 🌐</h2><p style=\"font-size:14px; font-weight:bold; color:#10b981; margin-top:30px;\">POWERED BY EARNZIO</p></body></html>";
-                  view.loadDataWithBaseURL(null, customErrorPage, "text/html", "UTF-8", null);
-              }
-              
-              private void requestRequiredPermissions() {
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                          requestPermissions(new String[]{ Manifest.permission.READ_PHONE_STATE, Manifest.permission.POST_NOTIFICATIONS }, 1);
-                      } else {
-                          requestPermissions(new String[]{ Manifest.permission.READ_PHONE_STATE }, 1);
-                      }
-                  }
-              }
-
-              private void scheduleDailyNotification() {
-                  AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                  Intent intent = new Intent(this, AlarmReceiver.class);
-                  PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                  
-                  Calendar calendar = Calendar.getInstance();
-                  calendar.set(Calendar.HOUR_OF_DAY, 5);
-                  calendar.set(Calendar.MINUTE, 0);
-                  calendar.set(Calendar.SECOND, 0);
-                  
-                  if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
-                      calendar.add(Calendar.DAY_OF_YEAR, 1);
-                  }
-                  
-                  if (alarmManager != null) {
-                      alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HOUR, pendingIntent);
-                  }
-              }
-
               @Override
               protected void onCreate(Bundle savedInstanceState) {
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                      Window window = getWindow();
-                      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                      window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                      window.setStatusBarColor(Color.WHITE);
-                      window.setNavigationBarColor(Color.WHITE);
-                      int flags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-                      }
-                      window.getDecorView().setSystemUiVisibility(flags);
-                  }
-
                   super.onCreate(savedInstanceState);
-                  setContentView(R.layout.activity_main);
                   
-                  webView = findViewById(R.id.webView);
-                  videoView = findViewById(R.id.videoView);
-                  splashPlaceholder = findViewById(R.id.splashPlaceholder);
+                  webView = new WebView(this);
+                  setContentView(webView);
                   
-                  requestRequiredPermissions();
-                  scheduleDailyNotification(); 
+                  // Initialize Unity Ads Native SDK
+                  UnityAds.initialize(getApplicationContext(), unityGameID, false, new IUnityAdsInitializationListener() {
+                      @Override public void onInitializationComplete() {}
+                      @Override public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {}
+                  });
                   
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
                   webSettings.setDomStorageEnabled(true);
-                  webSettings.setAllowFileAccess(true);
-                  webSettings.setAllowContentAccess(true);
-                  webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                  webSettings.setMediaPlaybackRequiresUserGesture(false); 
-                  webSettings.setUserAgentString("Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
-
-                  CookieManager.getInstance().setAcceptCookie(true);
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                      CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
-                  }
-
-                  webAppInterface = new WebAppInterface(this);
-                  webView.addJavascriptInterface(webAppInterface, "AndroidApp");
-
-                  webView.setWebViewClient(new WebViewClient() {
-                      @Override
-                      public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                          if (request.isForMainFrame()) { showOfflinePage(view); }
-                      }
-
-                      @Override
-                      public void onPageFinished(WebView view, String url) {
-                          super.onPageFinished(view, url);
-                          String deviceId = webAppInterface.getDeviceId();
-                          String jsToInject = "javascript:(function(){ localStorage.setItem('deviceId', '" + deviceId + "'); })();";
-                          view.evaluateJavascript(jsToInject, null);
-                      }
-
-                      @Override
-                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                          String url = request.getUrl().toString();
-                          
-                          // WhatsApp Intent
-                          if (url.startsWith("https://api.whatsapp.com/") || url.startsWith("https://wa.me/") || url.startsWith("whatsapp://")) {
-                              try {
-                                  Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                                  intent.setPackage("com.whatsapp"); 
-                                  startActivity(intent);
-                                  return true;
-                              } catch (Exception e) {
-                                  try {
-                                      Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                                      startActivity(fallbackIntent);
-                                      return true;
-                                  } catch (Exception e2) {
-                                      Toast.makeText(getApplicationContext(), "WhatsApp is not installed", Toast.LENGTH_SHORT).show();
-                                      return true;
-                                  }
-                              }
-                          }
-                          
-                          // Mee site WebView lopalane open avvali
-                          if (url.contains("earnzio-org.blogspot.com")) {
-                              return false;
-                          }
-                          
-                          // Ads leda inka ye external link click chesina Chrome/Browser lo open avuthundi
-                          if (url.startsWith("http://") || url.startsWith("https://")) {
-                              try {
-                                  Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                                  startActivity(browserIntent);
-                                  return true;
-                              } catch (Exception e) {
-                                  return false;
-                              }
-                          }
-                          
-                          return true;
-                      }
-                  });
-
-                  webView.setWebChromeClient(new WebChromeClient());
-
-                  if (!isNetworkAvailable()) {
-                      showOfflinePage(webView);
-                  } else {
-                      webView.loadUrl("https://earnzio-org.blogspot.com/");
-                  }
                   
-                  int videoResId = getResources().getIdentifier("splash_video", "raw", getPackageName());
-                  if(videoResId != 0) {
-                      Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + videoResId);
-                      videoView.setVideoURI(videoUri);
-                      
-                      videoView.setOnPreparedListener(mp -> {
-                          mp.setVolume(0f, 0f);
-                          mp.setLooping(false);
-                          mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
-                          
-                          mp.setOnInfoListener((mediaPlayer, what, extra) -> {
-                              if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-                                  splashPlaceholder.setVisibility(View.GONE);
-                                  return true;
-                              }
-                              return false;
-                          });
-                          
-                          videoView.start();
-                      });
-                      
-                      videoView.setOnCompletionListener(mp -> {
-                          videoView.setVisibility(View.GONE);
-                          splashPlaceholder.setVisibility(View.GONE);
-                          webView.setVisibility(View.VISIBLE);
-                      });
-                      
-                      videoView.setOnErrorListener((mp, what, extra) -> {
-                          videoView.setVisibility(View.GONE);
-                          splashPlaceholder.setVisibility(View.GONE);
-                          webView.setVisibility(View.VISIBLE);
-                          return true;
-                      });
-                  } else {
-                      videoView.setVisibility(View.GONE);
-                      splashPlaceholder.setVisibility(View.GONE);
-                      webView.setVisibility(View.VISIBLE);
-                  }
+                  // Interface linking JS to Native Java
+                  webView.addJavascriptInterface(new WebAppInterface(this), "AndroidApp");
+                  
+                  // 🔥 LOADS THE OFFLINE HTML FILE (NO WEBSITE LINK) 🔥
+                  webView.loadUrl("file:///android_asset/index.html");
               }
 
+              // Class to handle JS calls
               public class WebAppInterface {
                   Context mContext;
                   WebAppInterface(Context c) { mContext = c; }
-                  
-                  @JavascriptInterface
-                  @SuppressLint("HardwareIds")
-                  public String getDeviceId() {
-                      return Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
-                  }
 
                   @JavascriptInterface
-                  public void appReadyToDisplay() {}
-
-                  @JavascriptInterface
-                  public void showToast(String message) {
-                      ((Activity) mContext).runOnUiThread(() -> Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show());
+                  public void showUnityAd(String adUnitId) {
+                      ((Activity) mContext).runOnUiThread(() -> {
+                          UnityAds.load(adUnitId, new IUnityAdsLoadListener() {
+                              @Override
+                              public void onUnityAdsAdLoaded(String placementId) {
+                                  UnityAds.show((Activity) mContext, placementId, new UnityAdsShowOptions(), new IUnityAdsShowListener() {
+                                      @Override public void onUnityAdsShowFailure(String placementId, UnityAds.UnityAdsShowError error, String message) {}
+                                      @Override public void onUnityAdsShowStart(String placementId) {}
+                                      @Override public void onUnityAdsShowClick(String placementId) {}
+                                      @Override public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
+                                          // Reward logic after Ad finishes
+                                          Toast.makeText(mContext, "Coins Added!", Toast.LENGTH_SHORT).show();
+                                      }
+                                  });
+                              }
+                              @Override public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
+                                  Toast.makeText(mContext, "Loading Ad... Please wait", Toast.LENGTH_SHORT).show();
+                              }
+                          });
+                      });
                   }
               }
           }
           EOF
 
-      - name: Build APK
+      - name: Build Standalone APK
         run: gradle :app:assembleDebug
 
-      - name: Upload APK
+      - name: Upload Standalone APK
         uses: actions/upload-artifact@v4
         with:
-          name: EARNZIO-APK
+          name: EARNZIO-OFFLINE-APK
           path: app/build/outputs/apk/debug/app-debug.apk
