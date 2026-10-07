@@ -1,4 +1,4 @@
-name: Build Earnzio Ultimate Offline APK
+name: Build Earnzio Pro Ultimate APK
 
 on:
   workflow_dispatch: 
@@ -75,24 +75,30 @@ jobs:
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-            <title>Earnzio Ultimate</title>
-            <link href='https://fonts.googleapis.com/css2?family=Gidugu&display=swap' rel='stylesheet'/>
+            <title>Earnzio Professional</title>
             <style>
               @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
               
               body { 
-                margin: 0; padding: 0; font-family: 'Roboto', 'Gidugu', sans-serif;
+                margin: 0; padding: 0; font-family: 'Roboto', sans-serif;
                 background: linear-gradient(135deg, #e6e9ff 0%, #b8c6ff 50%, #859aff 100%);
-                background-attachment: fixed; color: #000; padding-bottom: 80px; user-select: none; -webkit-user-select: none;
+                background-attachment: fixed; color: #000; user-select: none; -webkit-user-select: none;
               }
+              
+              /* LOGIN & REGISTER SCREEN */
+              #auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; box-sizing: border-box; }
+              .auth-box { background: white; width: 100%; max-width: 400px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); text-align: center; }
+              .auth-title { font-size: 28px; font-weight: 900; color: #2e1065; margin-bottom: 20px; }
+              .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
+              .auth-input:focus { border-color: #15803d; }
+              .auth-btn { background: #2e1065; color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
+              .auth-switch { color: #15803d; font-weight: bold; cursor: pointer; font-size: 14px; text-decoration: underline; }
+
+              /* MAIN APP CONTAINER */
+              #main-app { display: none; padding-bottom: 80px; }
               
               .top-bar { display: flex; justify-content: flex-end; padding: 15px; }
               .coin-box { background: white; padding: 5px 15px; border-radius: 8px; border: 1px solid #ddd; font-weight: bold; font-size: 20px; color: #15803d; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-              
-              /* TOP NAVIGATION FOR INTERNAL PAGES (CAPTCHA/QUIZ) */
-              .page-top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; margin-bottom: 15px; border-radius: 0 0 15px 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-              .door-btn { background: #fee2e2; color: #ef4444; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: 1px solid #fca5a5; display: flex; align-items: center; gap: 5px; }
-              .page-title { font-size: 20px; font-weight: 900; color: #ef4444; letter-spacing: 1px; }
               
               .tab-content { display: none; padding: 10px; animation: fadeIn 0.3s ease; }
               .tab-content.active { display: block; }
@@ -102,263 +108,261 @@ jobs:
               .daily-claim-box { background: rgba(255,255,255,0.8); border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center; }
               .days-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
               .day-box { background: white; border: 2px solid #333; border-radius: 8px; width: 12%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
-              .day-box.claimed { background: #15803d; color: white; border-color: #15803d; }
               .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-
               .task-card { background: rgba(255,255,255,0.7); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; position: relative; }
-              .task-num { position: absolute; top: 15px; left: 15px; background: white; width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid #333; font-size: 18px; }
               .task-title { font-size: 22px; font-weight: 900; margin: 15px 0 10px 0; color: #2e1065; }
-              .start-btn { background: white; border: 2px solid #ddd; padding: 10px 30px; border-radius: 8px; font-size: 22px; font-weight: 900; color: #15803d; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+              .start-btn { background: white; border: 2px solid #ddd; padding: 10px 30px; border-radius: 8px; font-size: 20px; font-weight: 900; color: #15803d; cursor: pointer; }
 
-              /* CAPTCHA & QUIZ SHARED */
-              .submit-btn { background: #15803d; color: white; width: 100%; padding: 15px; border-radius: 8px; font-size: 20px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom:10px; }
+              /* YOUTUBE WATCH TAB */
+              .yt-player-container { width: 100%; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 15px; display: none; }
+              .yt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+              .yt-thumb { width: 100%; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.3s; }
+              .yt-thumb:active { border-color: #ef4444; transform: scale(0.95); }
+              .yt-title { font-size: 14px; font-weight: bold; text-align: center; margin-top: 5px; color: #333; }
 
-              /* CAPTCHA */
-              .captcha-box { background: white; padding: 30px 20px; text-align: center; font-size: 28px; font-family: 'Courier New', monospace; font-weight: 900; letter-spacing: 8px; border: 2px solid #ccc; margin: 20px 0; border-radius: 8px; }
-              .captcha-input { width: 100%; padding: 15px; border: 2px solid #ccc; border-radius: 8px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline:none; }
-
-              /* PRE-QUIZ MODAL */
-              .pre-quiz-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1001; flex-direction: column; justify-content: center; align-items: center; color: white; text-align:center; }
-              .lang-btn { background: #10b981; color: white; border: none; padding: 15px 30px; border-radius: 25px; font-size: 22px; font-weight: bold; margin: 10px; cursor: pointer; width: 200px; font-family: 'Gidugu', sans-serif; }
-              .timer-spinner { position: relative; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; margin:0 auto; }
-              .circular-loader { position: absolute; width: 100%; height: 100%; border: 5px solid rgba(255,255,255,0.2); border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; }
-              @keyframes spin { to { transform: rotate(360deg); } }
-
-              /* QUIZ */
-              .quiz-q { background: white; padding: 20px; border-radius: 8px; font-size: 18px; font-weight: 900; margin: 20px 0; border: 2px solid #ccc; line-height: 1.4; }
-              .quiz-opt { background: white; padding: 15px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-weight: bold; display: flex; gap: 15px; cursor: pointer; font-size: 16px; align-items: center; }
-              .opt-let { font-weight: 900; background: white; border: 1px solid #ccc; padding: 5px 12px; border-radius: 5px; }
-              .quiz-opt.correct { background: #15803d; color: white; border-color: #15803d; }
-              .quiz-opt.wrong { background: #ef4444; color: white; border-color: #ef4444; }
-              .quiz-exp { background: #15803d; color: white; padding: 15px; border-radius: 8px; font-weight: bold; display: none; margin-top: 15px; font-size: 16px; text-align:center; }
-              .mcq-timer-bar { background: #fee2e2; color: #ef4444; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 10px; display: flex; justify-content: space-between; }
-
-              /* PROFILE */
-              .pro-section { display: none; animation: fadeIn 0.3s ease; }
-              .pro-section.active { display: block; }
+              /* PROFILE TAB & INLINE WITHDRAWAL */
               .pro-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
               .pro-name { background: white; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; font-size: 18px; flex-grow: 1; text-align: center; margin: 0 10px; }
-              .icon-btn { background: white; border: 1px solid #ccc; width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
-              .id-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-              .id-box { background: #15803d; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold; font-size: 16px; }
+              .id-box { background: #15803d; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold; margin-bottom: 15px; text-align: center; }
               .pro-wallet { background: #2e1065; color: white; text-align: center; padding: 20px; border-radius: 10px; font-size: 45px; font-weight: 900; margin-bottom: 15px; }
-              .withdraw-btn-main { background: white; border: 2px solid #ccc; padding: 12px; text-align: center; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 18px; width: 60%; margin: 0 auto 20px auto; display: block; color: #000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-              .menu-item { background: white; padding: 15px 20px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; cursor: pointer; }
-              .social-row { display: flex; justify-content: space-around; margin-top: 20px; }
-              .social-cir { background: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; border: 1px solid #ccc; font-size: 16px; }
-              .w-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-              .w-tab { flex: 1; background: white; text-align: center; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 16px; }
-              .w-tab.active { background: #e5e7eb; }
-              .w-input { width: 100%; padding: 15px; margin-bottom: 10px; border: 2px solid #ccc; border-radius: 8px; font-weight: bold; box-sizing: border-box; font-size: 16px; outline:none; }
-              .tx-box { padding: 15px; border-radius: 8px; border: 2px solid #ccc; margin-bottom: 10px; display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; align-items: center; }
-              .tx-suc { background: #15803d; color: white; border-color: #15803d; }
-              .tx-pen { background: #9ca3af; color: white; border-color: #9ca3af; }
-              .tx-amt { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; font-size:16px;}
+              
+              .menu-item { background: white; padding: 15px 20px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; cursor: pointer; color:#2e1065; }
+              
+              /* INLINE EXPANDABLE SECTIONS */
+              .inline-section { display: none; background: rgba(255,255,255,0.9); padding: 15px; border: 2px dashed #ccc; border-radius: 8px; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
+              .w-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+              .w-tab { flex: 1; background: white; text-align: center; padding: 10px; border: 2px solid #ccc; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 14px; }
+              .w-tab.active { background: #e5e7eb; border-color:#333; }
+              .w-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; box-sizing: border-box; }
+              .submit-btn { background: #15803d; color: white; width: 100%; padding: 12px; border-radius: 8px; font-size: 18px; font-weight: 900; border: none; cursor: pointer; margin-bottom:10px; }
+              
+              .tx-box { padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 8px; display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; background:white; }
+              .tx-suc { border-left: 5px solid #15803d; }
+              .tx-pen { border-left: 5px solid #f59e0b; }
 
-              /* CHAT & FEED */
-              .fab-support { position: fixed; bottom: 85px; right: 20px; width: 55px; height: 55px; background: #000; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 950; }
-              .chat-sidebar { position: fixed; top: 0; right: -100%; width: 85%; max-width: 350px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 1100; display: flex; flex-direction: column; transition: right 0.3s ease; }
-              .chat-sidebar.open { right: 0; }
-              .chat-header { background: #000; color: #fff; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 20px; }
-              .chat-close { cursor: pointer; font-size: 20px; }
-              .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; gap: 10px; font-size: 18px; }
-              .chat-msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; line-height: 1.4; font-weight: 600; }
-              .msg-bot { background: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 2px; color: #000; }
-              .msg-user { background: #000; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
-              .chat-footer { padding: 10px; background: #fff; border-top: 1px solid #ddd; display: flex; gap: 10px; }
-              .chat-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 16px; }
-              .chat-send { background: #000; color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; }
-              
-              .feed-box { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ccc; font-weight:bold; }
-              
               /* BOTTOM NAV */
-              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid #e5e7eb; z-index: 900; }
+              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid #e5e7eb; z-index: 1000; }
               .nav-icon { width: 50px; height: 50px; background: #f3f4f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; border: 2px solid #ddd; transition: 0.3s; }
               .nav-icon.active { background: #f59e0b; color: white; border-color: #d97706; transform: scale(1.1); }
             </style>
+            
+            <!-- FIREBASE SDKS -->
+            <script type="module">
+              import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+              import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+              // 🔴 MEE FIREBASE CONFIG IKKADA PETTANDI 🔴
+              const firebaseConfig = {
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_PROJECT.firebaseapp.com",
+                projectId: "YOUR_PROJECT",
+                storageBucket: "YOUR_PROJECT.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef"
+              };
+
+              // Initialize Firebase
+              let app, auth;
+              try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+              } catch(e) { console.log("Firebase not configured yet."); }
+
+              window.doAuth = function(type) {
+                const email = document.getElementById('authEmail').value;
+                const pass = document.getElementById('authPass').value;
+                if(!email || !pass) { alert("Please enter email & password"); return; }
+                
+                // If API Key is default, bypass for testing
+                if(firebaseConfig.apiKey === "YOUR_API_KEY") {
+                  alert("Test Login Success! Please add Real Firebase Keys later.");
+                  document.getElementById('auth-screen').style.display = 'none';
+                  document.getElementById('main-app').style.display = 'block';
+                  return;
+                }
+
+                if(type === 'login') {
+                  signInWithEmailAndPassword(auth, email, pass)
+                    .then((user) => {
+                      document.getElementById('auth-screen').style.display = 'none';
+                      document.getElementById('main-app').style.display = 'block';
+                    }).catch((error) => { alert(error.message); });
+                } else {
+                  createUserWithEmailAndPassword(auth, email, pass)
+                    .then((user) => { alert("Registered Successfully!"); })
+                    .catch((error) => { alert(error.message); });
+                }
+              };
+            </script>
           </head>
           <body>
 
-            <!-- FAB CHAT -->
-            <div class="fab-support" onclick="toggleChat()">💬</div>
-            <div class="chat-sidebar" id="chatSidebar">
-              <div class="chat-header">
-                <span>AI Support</span><span class="chat-close" onclick="toggleChat()">✖</span>
-              </div>
-              <div class="chat-body" id="chatBody">
-                <div class="chat-msg msg-bot">నమస్కారం! నేను ఎలా సహాయపడగలను?</div>
-              </div>
-              <div class="chat-footer">
-                <input type="text" id="chatInput" class="chat-input" placeholder="Type message..." onkeypress="if(event.key==='Enter') sendChat()"/>
-                <button class="chat-send" onclick="sendChat()">➤</button>
+            <!-- AUTH SCREEN -->
+            <div id="auth-screen">
+              <div class="auth-box">
+                <div class="auth-title" id="authTitle">LOGIN</div>
+                <input type="email" id="authEmail" class="auth-input" placeholder="Email Address">
+                <input type="password" id="authPass" class="auth-input" placeholder="Password">
+                <button class="auth-btn" id="authBtn" onclick="doAuth('login')">LOGIN SECURELY</button>
+                <div class="auth-switch" id="authSwitch" onclick="toggleAuthMode()">Don't have an account? Register Here</div>
               </div>
             </div>
 
-            <!-- PRE-QUIZ MODAL -->
-            <div class="pre-quiz-modal" id="preQuizModal">
-              <div id="langSelector">
-                <h2 style="margin-bottom:30px;">Select Language / భాషను ఎంచుకోండి</h2>
-                <button class="lang-btn" onclick="startQuizTimer('en')">English</button><br/>
-                <button class="lang-btn" onclick="startQuizTimer('te')">తెలుగు</button><br/><br/>
-                <span style="font-size:20px; color:#aaa; cursor:pointer;" onclick="document.getElementById('preQuizModal').style.display='none'">✖ Cancel</span>
+            <!-- MAIN APP (Hidden until login) -->
+            <div id="main-app">
+              <div class="top-bar">
+                <div class="coin-box">🪙 <span class="bal-txt">12.5</span></div>
               </div>
-              <div id="spinnerContainer" style="display:none;">
-                <h3 id="spinnerText">Loading Quiz...</h3>
-                <div class="timer-spinner">
-                  <div class="circular-loader"></div>
-                  <div style="font-size:30px; font-weight:bold;" id="spinnerNum">5</div>
+
+              <!-- HOME TAB -->
+              <div id="tab-home" class="tab-content active">
+                <div class="daily-claim-box">
+                  <div class="days-row">
+                    <div class="day-box">1</div><div class="day-box">2</div><div class="day-box">3</div>
+                    <div class="day-box">4</div><div class="day-box">5</div><div class="day-box">6</div><div class="day-box">7</div>
+                  </div>
+                  <button class="claim-btn" onclick="alert('Claimed +5 Coins!')">CLAIM NOW</button>
+                </div>
+                <div class="task-card">
+                  <div class="task-title">Solve Captcha</div>
+                  <div class="start-btn" onclick="alert('Captcha Started!')">▶ START</div>
+                </div>
+                <div class="task-card">
+                  <div class="task-title">Play Quiz</div>
+                  <div class="start-btn" onclick="alert('Quiz Started!')">▶ START</div>
                 </div>
               </div>
-            </div>
 
-            <!-- TABS -->
-            <div id="tab-home" class="tab-content active">
-              <div class="top-bar"><div class="coin-box">🪙 <span class="bal-txt">12.5</span></div></div>
-              <div class="daily-claim-box">
-                <div class="days-row">
-                  <div class="day-box">1</div><div class="day-box">2</div><div class="day-box">3</div>
-                  <div class="day-box">4</div><div class="day-box">5</div><div class="day-box">6</div><div class="day-box">7</div>
+              <!-- WATCH TAB (YOUTUBE VIDEOS) -->
+              <div id="tab-watch" class="tab-content">
+                <h2 style="text-align:center; color:#2e1065; margin-top:0;">Watch & Earn</h2>
+                
+                <!-- YouTube Iframe Player -->
+                <div class="yt-player-container" id="ytPlayerContainer">
+                  <iframe id="ytIframe" width="100%" height="220" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                 </div>
-                <button class="claim-btn" onclick="claimDaily()">CLAIM NOW</button>
-              </div>
-              <div class="task-card">
-                <div class="task-num">1</div><div class="task-title">Captcha Entry</div>
-                <div class="start-btn" onclick="nav('captcha'); genCap();">▶ START</div>
-              </div>
-              <div class="task-card">
-                <div class="task-num">2</div><div class="task-title">MCQ Test</div>
-                <div class="start-btn" onclick="document.getElementById('preQuizModal').style.display='flex'; document.getElementById('langSelector').style.display='block'; document.getElementById('spinnerContainer').style.display='none';">▶ START</div>
-              </div>
-            </div>
 
-            <!-- CAPTCHA TAB -->
-            <div id="tab-captcha" class="tab-content">
-              <div class="page-top-bar">
-                <div class="door-btn" onclick="nav('home')">🚪</div>
-                <div class="page-title">CAPTCHA</div>
-                <div class="coin-box" style="padding:2px 10px; font-size:16px;">🪙 <span class="bal-txt">12.5</span></div>
+                <div class="yt-grid">
+                  <div onclick="playVideo('gR49U4k42y8')">
+                    <img src="https://img.youtube.com/vi/gR49U4k42y8/mqdefault.jpg" class="yt-thumb">
+                    <div class="yt-title">Telugu Latest News</div>
+                  </div>
+                  <div onclick="playVideo('zT9b6v3X-3Y')">
+                    <img src="https://img.youtube.com/vi/zT9b6v3X-3Y/mqdefault.jpg" class="yt-thumb">
+                    <div class="yt-title">Comedy Scenes</div>
+                  </div>
+                  <div onclick="playVideo('E07s5ZYygMg')">
+                    <img src="https://img.youtube.com/vi/E07s5ZYygMg/mqdefault.jpg" class="yt-thumb">
+                    <div class="yt-title">Tech Updates</div>
+                  </div>
+                  <div onclick="playVideo('F44gE2tFz8A')">
+                    <img src="https://img.youtube.com/vi/F44gE2tFz8A/mqdefault.jpg" class="yt-thumb">
+                    <div class="yt-title">Trending Movies</div>
+                  </div>
+                </div>
               </div>
-              <div class="captcha-box" id="capText">A7X9P</div>
-              <input type="text" class="captcha-input" id="capInput" placeholder="CAPTCHA TEXT ENTER BOX">
-              <button class="submit-btn" onclick="submitCaptcha()">SUBMIT</button>
-            </div>
 
-            <!-- QUIZ TAB -->
-            <div id="tab-quiz" class="tab-content">
-              <div class="page-top-bar">
-                <div class="door-btn" onclick="closeQuiz()">🚪</div>
-                <div class="page-title">QUIZ</div>
-                <div class="coin-box" style="padding:2px 10px; font-size:16px;">🪙 <span class="bal-txt">12.5</span></div>
-              </div>
-              <div class="mcq-timer-bar"><span>⏱ Time Left:</span><span id="qTimerDisplay">15s</span></div>
-              <div class="task-num" style="position:relative; margin-bottom:10px; top:0; left:0; width:30px;height:30px;font-size:16px;" id="qNum">1</div>
-              <div class="quiz-q" id="qText">QUESTION TEXT HERE</div>
-              <div id="opts"></div>
-              <div class="quiz-exp" id="qExp"></div>
-            </div>
-
-            <!-- FEED TAB -->
-            <div id="tab-feed" class="tab-content">
-              <div class="top-bar"><div class="coin-box">🪙 <span class="bal-txt">12.5</span></div></div>
-              <h2 style="text-align:center; color:#2e1065;">News Feed / Videos</h2>
-              <div class="feed-box" onclick="playAd()">▶ Watch Ad for Coins (Click Here)</div>
-              <div class="feed-box">📰 Today Latest News (Telugu)</div>
-              <div class="feed-box">🍿 Movies Updates</div>
-            </div>
-
-            <!-- PROFILE TAB -->
-            <div id="tab-profile" class="tab-content">
-              <!-- MAIN PROFILE -->
-              <div id="sec-pro-main" class="pro-section active">
+              <!-- PROFILE TAB & INLINE WITHDRAWAL -->
+              <div id="tab-profile" class="tab-content">
                 <div class="pro-header">
-                  <div class="icon-btn">👤</div><div class="pro-name">VIKASH RAJU</div><div class="icon-btn">📞</div>
+                  <div class="pro-name">VIKASH RAJU</div>
                 </div>
-                <div class="id-row">
-                  <div class="id-box">ID : 381130</div><div class="id-box" style="cursor:pointer;" onclick="alert('Copied!')">COPY</div>
-                </div>
+                <div class="id-box">USER ID : 381130</div>
                 <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
-                <div class="withdraw-btn-main" onclick="showProSec('sec-pro-withdraw')">WITHDRAWAL</div>
-
-                <div class="menu-item">CHANGE PASSWORD</div>
-                <div class="menu-item">ABOUT US <span>➜</span></div>
-                <div class="menu-item">PRIVACY POLICY <span>➜</span></div>
-                <div class="menu-item">TERM AND CONDITION <span>➜</span></div>
-
-                <div class="social-row">
-                  <div class="social-cir">INS</div><div class="social-cir">YT</div><div class="social-cir">FB</div><div class="social-cir">WA</div>
+                
+                <!-- 🔴 INLINE WITHDRAWAL BUTTON 🔴 -->
+                <div class="menu-item" onclick="toggleSection('withdrawSec')">
+                  💳 WITHDRAWAL <span>▼</span>
                 </div>
+                
+                <!-- INLINE WITHDRAWAL FORM -->
+                <div id="withdrawSec" class="inline-section">
+                  <div class="w-tabs">
+                    <div class="w-tab active" id="tabBank" onclick="selW('bank')">BANK 🏦</div>
+                    <div class="w-tab" id="tabUpi" onclick="selW('upi')">UPI ID</div>
+                  </div>
+                  <div id="w-form-bank">
+                    <input type="text" class="w-input" placeholder="BANK NAME">
+                    <input type="text" class="w-input" placeholder="ACCOUNT HOLDER">
+                    <input type="number" class="w-input" placeholder="ACCOUNT NUMBER">
+                  </div>
+                  <div id="w-form-upi" style="display:none;">
+                    <input type="text" class="w-input" id="upiId" placeholder="ENTER UPI ID">
+                  </div>
+                  <input type="number" id="wAmount" class="w-input" placeholder="Amount (e.g. 12.50)" style="border-color:#2e1065;">
+                  <button class="submit-btn" onclick="submitAppScript()">SUBMIT REQUEST</button>
+                </div>
+
+                <!-- 🔴 INLINE TRANSACTIONS BUTTON 🔴 -->
+                <div class="menu-item" onclick="toggleSection('txSec')">
+                  📜 RECENT TRANSACTIONS <span>▼</span>
+                </div>
+                
+                <div id="txSec" class="inline-section">
+                  <div class="tx-box tx-pen"><span>Pending Request</span> <span>🪙 12.5</span></div>
+                  <div class="tx-box tx-suc"><span>Success</span> <span>🪙 60</span></div>
+                  <div class="tx-box tx-suc"><span>Success</span> <span>🪙 147</span></div>
+                </div>
+
+                <div class="menu-item">⚙️ SETTINGS <span>➜</span></div>
+                <div class="menu-item">📞 CONTACT US <span>➜</span></div>
               </div>
 
-              <!-- WITHDRAW FORM -->
-              <div id="sec-pro-withdraw" class="pro-section">
-                <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
-                <div class="withdraw-btn-main">WITHDRAWAL</div>
-                
-                <div class="w-tabs">
-                  <div class="w-tab active" id="tabBank" onclick="selW('bank')">BANK 🏦</div>
-                  <div class="w-tab" id="tabUpi" onclick="selW('upi')">UPI ID</div>
-                </div>
-                
-                <div id="w-form-bank">
-                  <input type="text" class="w-input" placeholder="SELECT BANK">
-                  <input type="text" class="w-input" placeholder="ACCOUNT HOLDER NAME">
-                  <input type="number" class="w-input" placeholder="ACCOUNT NUMBER">
-                  <input type="text" class="w-input" placeholder="IFSC CODE">
-                </div>
-                <div id="w-form-upi" style="display:none;">
-                  <input type="text" class="w-input" placeholder="ACCOUNT HOLDER NAME">
-                  <input type="text" class="w-input" placeholder="UPI ID">
-                </div>
-                <input type="number" class="w-input" placeholder="Amount (e.g. 12.50)">
-                
-                <button class="submit-btn" style="background:#2e1065;" onclick="alert('Request Sent!')">WITHDRAW</button>
-                <div class="withdraw-btn-main" style="width:100%; border:none; box-shadow:0 0 5px #ccc;" onclick="showProSec('sec-pro-tx')">RECENT TRANSACTIONS</div>
-                <button class="submit-btn" style="background:#6b7280;" onclick="showProSec('sec-pro-main')">BACK</button>
+              <!-- BOTTOM NAV -->
+              <div class="bottom-nav">
+                <div class="nav-icon active" id="nav-home" onclick="nav('home')">🏠</div>
+                <div class="nav-icon" id="nav-watch" onclick="nav('watch')">▶</div>
+                <div class="nav-icon" id="nav-profile" onclick="nav('profile')">👤</div>
               </div>
-
-              <!-- TRANSACTIONS -->
-              <div id="sec-pro-tx" class="pro-section">
-                <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
-                <div class="withdraw-btn-main">WITHDRAWAL</div>
-                <div class="withdraw-btn-main" style="width:100%; border:none; box-shadow:0 0 5px #ccc;">RECENT TRANSACTIONS</div>
-
-                <div class="tx-box tx-pen">WITHDRAWAL REQUEST PENDING <span class="tx-amt">🪙 12.5</span></div>
-                <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 60</span></div>
-                <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 147</span></div>
-                <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 134</span></div>
-                
-                <button class="submit-btn" style="background:#6b7280; margin-top:15px;" onclick="showProSec('sec-pro-withdraw')">BACK</button>
-              </div>
-            </div>
-
-            <!-- BOTTOM NAV -->
-            <div class="bottom-nav">
-              <div class="nav-icon active" id="nav-home" onclick="nav('home')">🏠</div>
-              <div class="nav-icon" id="nav-feed" onclick="nav('feed')">▶</div>
-              <div class="nav-icon" id="nav-profile" onclick="nav('profile')">👤</div>
             </div>
 
             <script>
-              let bal = 12.5; let claimed = false;
-              function updateBal() {
-                document.querySelectorAll('.bal-txt').forEach(el => el.innerText = bal.toFixed(1));
+              // --- LOGIN TOGGLE ---
+              let isLogin = true;
+              function toggleAuthMode() {
+                isLogin = !isLogin;
+                document.getElementById('authTitle').innerText = isLogin ? "LOGIN" : "REGISTER";
+                document.getElementById('authBtn').innerText = isLogin ? "LOGIN SECURELY" : "CREATE ACCOUNT";
+                document.getElementById('authBtn').setAttribute('onclick', isLogin ? "doAuth('login')" : "doAuth('register')");
+                document.getElementById('authSwitch').innerText = isLogin ? "Don't have an account? Register Here" : "Already have an account? Login";
               }
 
+              // --- NAVIGATION ---
               function nav(tab) {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
-                
-                if(tab !== 'captcha' && tab !== 'quiz') {
-                  document.getElementById('nav-' + tab).classList.add('active');
-                }
                 document.getElementById('tab-' + tab).classList.add('active');
-                if(tab === 'profile') showProSec('sec-pro-main');
+                document.getElementById('nav-' + tab).classList.add('active');
+                
+                // Pause YT Video if leaving watch tab
+                if(tab !== 'watch') {
+                  document.getElementById('ytIframe').src = "";
+                  document.getElementById('ytPlayerContainer').style.display = 'none';
+                }
               }
 
-              function showProSec(id) {
-                document.querySelectorAll('.pro-section').forEach(el => el.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
+              // --- YOUTUBE PLAY LOGIC ---
+              function playVideo(videoId) {
+                const playerContainer = document.getElementById('ytPlayerContainer');
+                const iframe = document.getElementById('ytIframe');
+                playerContainer.style.display = 'block';
+                iframe.src = "https://www.youtube.com/embed/" + videoId + "?autoplay=1&modestbranding=1&rel=0";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
               }
+
+              // --- INLINE TOGGLES (WITHDRAWAL / TRANSACTIONS) ---
+              function toggleSection(id) {
+                const sec = document.getElementById(id);
+                if(sec.style.display === 'block') {
+                  sec.style.display = 'none';
+                } else {
+                  // Hide others before opening one
+                  document.getElementById('withdrawSec').style.display = 'none';
+                  document.getElementById('txSec').style.display = 'none';
+                  sec.style.display = 'block';
+                }
+              }
+
               function selW(type) {
                 document.getElementById('tabBank').classList.remove('active');
                 document.getElementById('tabUpi').classList.remove('active');
@@ -373,114 +377,32 @@ jobs:
                 }
               }
 
-              function playAd() {
-                if(typeof AndroidApp !== 'undefined') AndroidApp.showUnityAd('Rewarded_Android');
-                else alert("Unity Ad will play in actual APK!");
-              }
+              // --- GOOGLE APP SCRIPT LOGIC (WITHDRAWAL) ---
+              function submitAppScript() {
+                const amount = document.getElementById('wAmount').value;
+                const upi = document.getElementById('upiId').value;
+                if(!amount) { alert("Enter amount!"); return; }
 
-              function claimDaily() {
-                if(claimed) { alert("Already claimed today!"); return; }
-                bal += 5.0; updateBal(); claimed = true;
-                document.querySelectorAll('.day-box')[0].classList.add('claimed');
-                alert("Claimed +5 Coins!");
-              }
+                // 🔴 MEE APPS SCRIPT URL IKKADA PETTANDI 🔴
+                const APPSCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
 
-              // CAPTCHA
-              let curCap = "";
-              function genCap() {
-                const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; curCap = "";
-                for(let i=0; i<6; i++) curCap += c.charAt(Math.floor(Math.random()*c.length));
-                document.getElementById('capText').innerText = curCap;
-                document.getElementById('capInput').value = "";
-              }
-              function submitCaptcha() {
-                if(document.getElementById('capInput').value.trim().toUpperCase() === curCap) {
-                  bal += 1.5; updateBal(); alert("Correct! +1.5 Coins"); genCap();
-                } else { alert("Wrong!"); genCap(); }
-              }
-
-              // QUIZ LOGIC (Timer + Native Lang)
-              const qTE = [{q:"తాజ్ మహల్‌ను నిర్మించిన మొఘల్ చక్రవర్తి ఎవరు?", o:["అక్బర్", "జహంగీర్", "షాజహాన్", "ఔరంగజేబు"], a:2, e:"షాజహాన్ తన భార్య ముంతాజ్ జ్ఞాపకార్థం నిర్మించాడు."}];
-              const qEN = [{q:"Who built the Taj Mahal?", o:["Akbar", "Jahangir", "Shah Jahan", "Aurangzeb"], a:2, e:"Shah Jahan built it for Mumtaz."}];
-              let curQList = []; let qIdx = 0; let qTimer; let timeLeft = 15; let isAns = false;
-
-              function startQuizTimer(lang) {
-                document.getElementById('langSelector').style.display = 'none';
-                document.getElementById('spinnerContainer').style.display = 'block';
-                curQList = lang === 'te' ? qTE : qEN;
-                document.getElementById('spinnerText').innerText = lang === 'te' ? "క్విజ్ లోడ్ అవుతోంది..." : "Loading Quiz...";
-                let cnt = 3;
-                document.getElementById('spinnerNum').innerText = cnt;
-                let sInt = setInterval(() => {
-                  cnt--; document.getElementById('spinnerNum').innerText = cnt;
-                  if(cnt <= 0) {
-                    clearInterval(sInt);
-                    document.getElementById('preQuizModal').style.display = 'none';
-                    nav('quiz'); qIdx = 0; loadQ();
-                  }
-                }, 1000);
-              }
-
-              function loadQ() {
-                clearInterval(qTimer); isAns = false;
-                document.getElementById('qExp').style.display = 'none';
-                if(qIdx >= curQList.length) { document.getElementById('qText').innerText="Completed!"; document.getElementById('opts').innerHTML=""; return; }
-                const qd = curQList[qIdx];
-                document.getElementById('qNum').innerText = qIdx+1;
-                document.getElementById('qText').innerText = qd.q;
-                let oHtml = ""; const lets = ["A", "B", "C", "D"];
-                qd.o.forEach((opt, i) => { oHtml += `<div class="quiz-opt" id="qo_${i}" onclick="checkQ(${i})"><span class="opt-let">${lets[i]}</span> ${opt}</div>`; });
-                document.getElementById('opts').innerHTML = oHtml;
-                timeLeft = 15; document.getElementById('qTimerDisplay').innerText = timeLeft + "s";
-                qTimer = setInterval(() => {
-                  timeLeft--; document.getElementById('qTimerDisplay').innerText = timeLeft + "s";
-                  if(timeLeft <= 0) { clearInterval(qTimer); timeOut(); }
-                }, 1000);
-              }
-
-              function checkQ(idx) {
-                if(isAns) return; isAns = true; clearInterval(qTimer);
-                const qd = curQList[qIdx];
-                document.getElementById('qo_'+qd.a).classList.add('correct');
-                if(idx === qd.a) {
-                  bal += 2.0; updateBal();
-                  document.getElementById('qExp').innerHTML = `✓ CORRECT ANSER!<br>${qd.e}`;
-                  document.getElementById('qExp').style.display = 'block';
-                } else {
-                  document.getElementById('qo_'+idx).classList.add('wrong');
-                  document.getElementById('qExp').innerHTML = `<div style="background:white; color:red; display:inline-block; padding:2px 10px; border-radius:5px; margin-bottom:5px;">⬟ WRONG ANSER</div><br>${qd.e}`;
-                  document.getElementById('qExp').style.display = 'block';
+                if(APPSCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL") {
+                   alert("Test Mode: Withdrawal Requested for " + amount + " Coins!\n(Add actual AppScript URL to save to Google Sheets)");
+                   document.getElementById('wAmount').value = "";
+                   toggleSection('withdrawSec');
+                   return;
                 }
-                setTimeout(()=> { qIdx++; loadQ(); }, 3000);
-              }
 
-              function timeOut() {
-                isAns = true; const qd = curQList[qIdx];
-                document.getElementById('qo_'+qd.a).classList.add('correct');
-                document.getElementById('qExp').innerHTML = `<div style="background:white; color:red; display:inline-block; padding:2px 10px; border-radius:5px; margin-bottom:5px;">⏱ TIME OUT!</div><br>${qd.e}`;
-                document.getElementById('qExp').style.display = 'block';
-                setTimeout(()=> { qIdx++; loadQ(); }, 3000);
-              }
-              function closeQuiz() { clearInterval(qTimer); nav('home'); }
-
-              // CHAT LOGIC
-              const GEMINI_API_KEY = "AQ.Ab8RN6IuKcYf-ZBpxpRVLPKYeylW8rp5u65T4tPzvbX9TowPFA";
-              function toggleChat() { document.getElementById('chatSidebar').classList.toggle('open'); }
-              async function sendChat() {
-                const inp = document.getElementById('chatInput'); const msg = inp.value.trim(); if(!msg) return;
-                appendMsg(msg, 'user'); inp.value = ''; const lId = appendMsg('...', 'bot');
-                try {
-                  const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=" + GEMINI_API_KEY, {
-                    method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({contents:[{role:"user",parts:[{text:msg}]}]})
-                  });
-                  const d = await r.json(); document.getElementById(lId).remove();
-                  appendMsg(d.candidates[0].content.parts[0].text, 'bot');
-                } catch(e) { document.getElementById(lId).remove(); appendMsg("Error connection", 'bot'); }
-              }
-              function appendMsg(text, type) {
-                const b = document.getElementById('chatBody'); const d = document.createElement('div');
-                const id = 'm_'+Date.now(); d.id = id; d.className = 'chat-msg msg-'+type; d.innerText = text;
-                b.appendChild(d); b.scrollTop = b.scrollHeight; return id;
+                fetch(APPSCRIPT_URL, {
+                  method: 'POST',
+                  mode: 'no-cors',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: "withdraw", userId: "381130", amount: amount, upi: upi })
+                }).then(() => {
+                  alert("Withdrawal Request Submitted Successfully!");
+                  document.getElementById('wAmount').value = "";
+                  toggleSection('withdrawSec');
+                }).catch(err => alert("Error submitting request"));
               }
             </script>
           </body>
@@ -514,7 +436,6 @@ jobs:
                   android:src="@drawable/app_icon"
                   android:scaleType="centerCrop"
                   android:background="#ffffff" />
-
           </FrameLayout>
           EOF
 
@@ -536,7 +457,7 @@ jobs:
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
-              <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:usesCleartextTraffic="true">
+              <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:usesCleartextTraffic="true" android:hardwareAccelerated="true">
                   <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -547,34 +468,25 @@ jobs:
           </manifest>
           EOF
 
-          # MAIN ACTIVITY - NATIVE SPLASH SCREEN + OFFLINE ASSETS
+          # MAIN ACTIVITY (Handles Splash -> WebView)
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
-          import android.app.Activity;
-          import android.content.Context;
           import android.media.MediaPlayer;
           import android.net.Uri;
           import android.os.Bundle;
           import android.view.View;
-          import android.webkit.JavascriptInterface;
           import android.webkit.WebSettings;
           import android.webkit.WebView;
+          import android.webkit.WebViewClient;
           import android.widget.ImageView;
-          import android.widget.Toast;
           import android.widget.VideoView;
           import androidx.appcompat.app.AppCompatActivity;
-          import com.unity3d.ads.IUnityAdsInitializationListener;
-          import com.unity3d.ads.IUnityAdsLoadListener;
-          import com.unity3d.ads.IUnityAdsShowListener;
-          import com.unity3d.ads.UnityAds;
-          import com.unity3d.ads.UnityAdsShowOptions;
 
           public class MainActivity extends AppCompatActivity {
               private WebView webView;
               private VideoView splashVideo;
               private ImageView splashLogo;
-              private String unityGameID = "YOUR_UNITY_GAME_ID_HERE"; 
               
               @Override
               protected void onCreate(Bundle savedInstanceState) {
@@ -585,10 +497,9 @@ jobs:
                   splashVideo = findViewById(R.id.splashVideo);
                   splashLogo = findViewById(R.id.splashLogo);
                   
-                  // 🔥 SPLASH SCREEN LOGIC 🔥
+                  // 🔥 SPLASH SCREEN 🔥
                   Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.splash_video);
                   splashVideo.setVideoURI(videoUri);
-                  
                   splashVideo.setOnPreparedListener(mp -> {
                       mp.setLooping(false);
                       mp.setOnInfoListener((mp1, what, extra) -> {
@@ -600,53 +511,20 @@ jobs:
                       });
                       splashVideo.start();
                   });
-                  
                   splashVideo.setOnCompletionListener(mp -> {
                       splashVideo.setVisibility(View.GONE);
                       splashLogo.setVisibility(View.GONE);
                       webView.setVisibility(View.VISIBLE);
                   });
                   
-                  // UNITY ADS
-                  UnityAds.initialize(getApplicationContext(), unityGameID, false, new IUnityAdsInitializationListener() {
-                      @Override public void onInitializationComplete() {}
-                      @Override public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {}
-                  });
-                  
-                  // WEBVIEW SETUP
+                  // 🔥 WEBVIEW SETUP 🔥
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
                   webSettings.setDomStorageEnabled(true);
+                  webSettings.setMediaPlaybackRequiresUserGesture(false);
                   
-                  webView.addJavascriptInterface(new WebAppInterface(this), "AndroidApp");
+                  webView.setWebViewClient(new WebViewClient());
                   webView.loadUrl("file:///android_asset/index.html");
-              }
-
-              public class WebAppInterface {
-                  Context mContext;
-                  WebAppInterface(Context c) { mContext = c; }
-
-                  @JavascriptInterface
-                  public void showUnityAd(String adUnitId) {
-                      ((Activity) mContext).runOnUiThread(() -> {
-                          UnityAds.load(adUnitId, new IUnityAdsLoadListener() {
-                              @Override
-                              public void onUnityAdsAdLoaded(String placementId) {
-                                  UnityAds.show((Activity) mContext, placementId, new UnityAdsShowOptions(), new IUnityAdsShowListener() {
-                                      @Override public void onUnityAdsShowFailure(String placementId, UnityAds.UnityAdsShowError error, String message) {}
-                                      @Override public void onUnityAdsShowStart(String placementId) {}
-                                      @Override public void onUnityAdsShowClick(String placementId) {}
-                                      @Override public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
-                                          Toast.makeText(mContext, "Reward Added!", Toast.LENGTH_SHORT).show();
-                                      }
-                                  });
-                              }
-                              @Override public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
-                                  Toast.makeText(mContext, "Ad loading failed", Toast.LENGTH_SHORT).show();
-                              }
-                          });
-                      });
-                  }
               }
           }
           EOF
@@ -657,5 +535,5 @@ jobs:
       - name: Upload Pro APK
         uses: actions/upload-artifact@v4
         with:
-          name: EARNZIO-ULTIMATE-APK
+          name: EARNZIO-PROFESSIONAL-APK
           path: app/build/outputs/apk/debug/app-debug.apk
