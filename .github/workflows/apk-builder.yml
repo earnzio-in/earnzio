@@ -87,7 +87,7 @@ jobs:
               }
               
               /* LOADING SPINNER */
-              #globalSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+              #globalSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
               .spinner { width: 50px; height: 50px; border: 5px solid #bae6fd; border-top-color: #0284c7; border-radius: 50%; animation: spin 1s linear infinite; }
               @keyframes spin { to { transform: rotate(360deg); } }
               .spinner-text { margin-top: 15px; font-weight: 900; color: #0284c7; font-size: 18px; }
@@ -127,11 +127,12 @@ jobs:
               .captcha-box { background: #f0f9ff; padding: 30px 20px; text-align: center; font-size: 28px; font-family: 'Courier New', monospace; font-weight: 900; letter-spacing: 8px; border: 2px dashed #0284c7; margin: 20px 0; border-radius: 8px; color:#0369a1;}
               .captcha-input { width: 100%; padding: 15px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline:none; }
               
-              /* YOUTUBE WATCH TAB */
+              /* YOUTUBE WATCH TAB - FIXED ERROR 153/152 */
               .yt-search-container { display: flex; gap: 10px; margin-bottom: 15px; }
               .yt-search-input { flex: 1; padding: 12px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; }
               .yt-search-btn { background: #ef4444; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 900; font-size: 16px; cursor: pointer; }
-              .yt-frame { width: 100%; height: 60vh; border: none; border-radius: 12px; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+              .yt-result-container { width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+              .yt-frame { width: 100%; height: 60vh; border: none; background: #000; }
 
               /* PROFILE TAB */
               .pro-header { margin-bottom: 15px; }
@@ -152,8 +153,8 @@ jobs:
               .tx-suc { border-left: 5px solid #059669; }
 
               /* BOTTOM NAV */
-              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #ddd; z-index: 1000; backdrop-filter: blur(5px); }
-              .nav-icon { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; background: transparent; border: none; color: #333; }
+              .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; z-index: 1000; }
+              .nav-icon { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; color: #333; }
               .nav-icon svg { width: 28px; height: 28px; fill: currentColor; }
               .nav-icon.active { color: #0284c7; transform: scale(1.15); }
             </style>
@@ -164,7 +165,7 @@ jobs:
               import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
               import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-              // 🔴 MEE FIREBASE CONFIG 🔴
+              // 🔴 FIREBASE CONFIG 🔴
               const firebaseConfig = {
                 apiKey: "AIzaSyAZLSUcRB160A4L7_Cf9erbnIBKEiRwAo4",
                 authDomain: "earnzio-in.firebaseapp.com",
@@ -183,7 +184,6 @@ jobs:
               let currentUser = null;
               let currentCoins = 0;
 
-              // Check Login Status Realtime
               onAuthStateChanged(auth, (user) => {
                 if (user) {
                   currentUser = user;
@@ -199,7 +199,6 @@ jobs:
                 }
               });
 
-              // AUTHENTICATION FUNCTION (LOGIN/REGISTER)
               window.doAuth = function(type) {
                 const name = document.getElementById('authName').value.trim();
                 const mobile = document.getElementById('authMobile').value.trim();
@@ -210,30 +209,48 @@ jobs:
                 
                 // Show Spinner
                 document.getElementById('globalSpinner').style.display = 'flex';
-                document.getElementById('spinnerText').innerText = type === 'login' ? 'Logging in...' : 'Registering...';
+                document.getElementById('spinnerText').innerText = type === 'login' ? 'Authenticating...' : 'Creating Account...';
 
-                // Dummy Email for Firebase Auth since it needs email format
                 const dummyEmail = mobile + "@earnzio.app";
 
                 if(type === 'login') {
                   signInWithEmailAndPassword(auth, dummyEmail, pass).catch((e) => {
                     document.getElementById('globalSpinner').style.display = 'none';
-                    alert("Login Failed: Incorrect Details");
+                    if(e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+                        alert("User not found! Please register first.");
+                    } else if (e.code === 'auth/wrong-password') {
+                        alert("Incorrect Password! Try again.");
+                    } else {
+                        alert("Login Failed. Check Mobile number & Password.");
+                    }
                   });
                 } else {
                   createUserWithEmailAndPassword(auth, dummyEmail, pass)
                     .then((cred) => {
-                      // Save Profile Data
+                      // Generate Unique Random ID (ER + 6 digits)
+                      const randomId = "ER" + Math.floor(100000 + Math.random() * 900000);
+                      
                       set(ref(db, 'users/' + cred.user.uid), { 
                         name: name,
                         mobile: mobile,
-                        password: pass, // Requested feature to show pass in profile
+                        password: pass, 
+                        uniqueId: randomId,
                         coins: 12.5, 
                         lastClaimDate: "" 
                       });
                       
-                      document.getElementById('globalSpinner').style.display = 'none';
-                      alert("✅ Registration Successful!\n12.5 Coins added. Logging you in...");
+                      setTimeout(() => {
+                          document.getElementById('globalSpinner').style.display = 'none';
+                          alert("✅ Registration Successful!\nYour Unique ID is: " + randomId + "\n12.5 Coins Added.");
+                          
+                          // SWITCH TO LOGIN AFTER SUCCESSFUL REGISTRATION
+                          signOut(auth).then(() => {
+                              document.getElementById('authName').value = "";
+                              document.getElementById('authPass').value = "";
+                              if(!isLogin) toggleAuthMode(); 
+                          });
+                      }, 1000);
+                      
                     }).catch((e) => {
                       document.getElementById('globalSpinner').style.display = 'none';
                       alert("Registration Error: Mobile number might already exist.");
@@ -249,9 +266,8 @@ jobs:
                     const data = snapshot.val();
                     currentCoins = data.coins || 0;
                     
-                    // Profile Updates
                     document.getElementById('proName').innerText = "👤 " + data.name;
-                    document.getElementById('proMobile').innerText = "📱 ID: " + data.mobile;
+                    document.getElementById('proMobile').innerText = "📱 ID: " + (data.uniqueId ? data.uniqueId : "ER" + data.mobile.substring(0,6));
                     document.getElementById('proPassword').innerText = "🔑 Password: " + data.password;
                     
                     updateUI();
@@ -288,7 +304,7 @@ jobs:
           </head>
           <body>
 
-            <!-- GLOBAL LOADING SPINNER -->
+            <!-- GLOBAL SPINNER -->
             <div id="globalSpinner">
               <div class="spinner"></div>
               <div class="spinner-text" id="spinnerText">Please wait...</div>
@@ -316,7 +332,6 @@ jobs:
             <div id="main-app">
               <div class="top-bar"><div class="coin-box">🪙 <span class="bal-txt">0.0</span></div></div>
 
-              <!-- HOME TAB -->
               <div id="tab-home" class="tab-content active">
                 <div class="daily-claim-box">
                   <div class="days-row">
@@ -340,14 +355,15 @@ jobs:
                 <button class="submit-btn" style="background:#0284c7;" onclick="nav('home')">BACK TO HOME</button>
               </div>
 
-              <!-- 🔴 WATCH TAB (YouTube Mobile Search) 🔴 -->
+              <!-- 🔴 WATCH TAB (Fixed YouTube Error 152/153) 🔴 -->
               <div id="tab-watch" class="tab-content">
                 <div class="yt-search-container">
                   <input type="text" id="ytSearchBox" class="yt-search-input" placeholder="Search Videos (e.g. Telugu Songs)">
                   <button class="yt-search-btn" onclick="searchYoutube()">Search</button>
                 </div>
-                <!-- YouTube Search Playlist Embed -->
-                <iframe id="ytPlayer" class="yt-frame" src="https://www.youtube.com/embed?listType=search&list=telugu+latest+movies" allowfullscreen></iframe>
+                <div class="yt-result-container">
+                  <iframe id="ytPlayer" class="yt-frame" src="https://www.youtube.com/embed?listType=user_uploads&list=telugu" allowfullscreen></iframe>
+                </div>
               </div>
 
               <!-- PROFILE TAB -->
@@ -355,7 +371,7 @@ jobs:
                 <div class="pro-header">
                   <div class="pro-name" id="proName">👤 Name</div>
                 </div>
-                <div class="id-box" id="proMobile">📱 ID: 9999999999</div>
+                <div class="id-box" id="proMobile">📱 ID: ERXXXXXX</div>
                 <div class="pass-box" id="proPassword">🔑 Password: ******</div>
                 
                 <div class="pro-wallet">🪙 <span class="bal-txt">0.0</span></div>
@@ -386,7 +402,7 @@ jobs:
                 <div class="menu-item" onclick="logout()" style="color:#ef4444; border-color:#ef4444;">🚪 LOGOUT <span>➜</span></div>
               </div>
 
-              <!-- 🔴 BOTTOM NAV 🔴 -->
+              <!-- BOTTOM NAV -->
               <div class="bottom-nav">
                 <div class="nav-icon active" id="nav-home" onclick="nav('home')">
                   <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -408,12 +424,10 @@ jobs:
                 document.getElementById('authBtn').innerText = isLogin ? "LOGIN TO ACCOUNT" : "CREATE ACCOUNT";
                 document.getElementById('authBtn').setAttribute('onclick', isLogin ? "doAuth('login')" : "doAuth('register')");
                 document.getElementById('authSwitch').innerText = isLogin ? "Don't have an account? Register Here" : "Already have an account? Login";
-                
-                // Show Name field only in Register mode
                 document.getElementById('authName').style.display = isLogin ? "none" : "block";
               }
 
-              // Toggle Password Visibility
+              // Eye Icon logic
               function togglePassword() {
                 const passInput = document.getElementById('authPass');
                 if (passInput.type === "password") {
@@ -434,9 +448,8 @@ jobs:
 
               function toggleSection(id) {
                 const sec = document.getElementById(id);
-                if(sec.style.display === 'block') {
-                  sec.style.display = 'none';
-                } else {
+                if(sec.style.display === 'block') { sec.style.display = 'none'; } 
+                else {
                   document.getElementById('withdrawSec').style.display = 'none';
                   document.getElementById('txSec').style.display = 'none';
                   sec.style.display = 'block';
@@ -457,12 +470,12 @@ jobs:
                 }
               }
 
-              // 🔴 YOUTUBE SEARCH EMBED 🔴
+              // 🔴 YOUTUBE SEARCH FIX 🔴
               function searchYoutube() {
                 const query = document.getElementById('ytSearchBox').value.trim();
                 if(!query) return;
-                // Standard Embed YouTube Search List
-                const embedUrl = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(query);
+                // Using YouTube Search Result Player embed URL
+                const embedUrl = "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(query) + "&autoplay=1";
                 document.getElementById('ytPlayer').src = embedUrl;
               }
 
@@ -477,9 +490,7 @@ jobs:
               function openCaptcha() { nav('captcha'); genCap(); }
               function submitCaptcha() {
                 if(document.getElementById('capInput').value.trim().toUpperCase() === curCap) {
-                  addCoins(1.5); 
-                  alert("Correct! +1.5 Coins Added"); 
-                  nav('home');
+                  addCoins(1.5); alert("Correct! +1.5 Coins Added"); nav('home');
                 } else { alert("Wrong Captcha! Try again."); genCap(); }
               }
             </script>
@@ -546,7 +557,7 @@ jobs:
           </manifest>
           EOF
 
-          # MAIN ACTIVITY (YOUTUBE FIX APPLIED HERE)
+          # MAIN ACTIVITY (YOUTUBE ERROR 153/152 BASE URL FIX)
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
@@ -605,13 +616,14 @@ jobs:
                   
                   webView.setWebViewClient(new WebViewClient());
 
-                  // 🔴 YOUTUBE ERROR 153 FIX (Base URL Hack) 🔴
+                  // 🔴 YOUTUBE EMBED FIX 🔴
                   try {
                       InputStream is = getAssets().open("index.html");
                       Scanner s = new Scanner(is).useDelimiter("\\A");
                       String html = s.hasNext() ? s.next() : "";
-                      // Loads the offline HTML but pretends it's on youtube.com so videos play smoothly!
-                      webView.loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "UTF-8", null);
+                      
+                      // Using Google's Base URL tricks YouTube into allowing playback in WebView
+                      webView.loadDataWithBaseURL("https://www.google.com", html, "text/html", "UTF-8", null);
                   } catch (Exception e) {
                       e.printStackTrace();
                   }
@@ -622,7 +634,7 @@ jobs:
       - name: Build Final Fixed APK
         run: gradle :app:assembleDebug
 
-      - name: Upload Final Fixed Firebase APK
+      - name: Upload Super Final APK
         uses: actions/upload-artifact@v4
         with:
           name: EARNZIO-SUPER-FINAL-APK
