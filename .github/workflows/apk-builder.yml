@@ -1,4 +1,4 @@
-name: Build Earnzio Standalone APK
+name: Build Earnzio Pro APK (Splash + Offline)
 
 on:
   workflow_dispatch: 
@@ -18,6 +18,8 @@ jobs:
           mkdir -p app/src/main/java/com/earnzio/app
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/res/raw
           mkdir -p app/src/main/assets
           
           echo "include ':app'" > settings.gradle
@@ -60,6 +62,10 @@ jobs:
           }
           EOF
 
+          # DOWNLOAD SPLASH VIDEO & LOGO
+          wget -O app/src/main/res/drawable/app_icon.jpg "https://res.cloudinary.com/ixxjuj5g/image/upload/v1790382703/20260926_003238.jpg"
+          wget -O app/src/main/res/raw/splash_video.mp4 "https://res.cloudinary.com/ixxjuj5g/video/upload/v1790382792/InShot_20260926_054447616.mp4"
+
           # ==========================================
           # 100% OFFLINE HTML + CSS + JS (NO WEB LINKS)
           # ==========================================
@@ -69,17 +75,15 @@ jobs:
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-            <title>Earnzio Offline</title>
+            <title>Earnzio Pro</title>
             <style>
-              /* CSS MOTHAM IKKADE UNDI */
               @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
               
               body { 
                 margin: 0; padding: 0; font-family: 'Roboto', sans-serif;
                 background: linear-gradient(135deg, #e6e9ff 0%, #b8c6ff 50%, #859aff 100%);
                 background-attachment: fixed;
-                color: #000; padding-bottom: 80px;
-                user-select: none; -webkit-user-select: none;
+                color: #000; padding-bottom: 80px; user-select: none; -webkit-user-select: none;
               }
               
               .top-bar { display: flex; justify-content: flex-end; padding: 15px; }
@@ -89,34 +93,59 @@ jobs:
               .tab-content.active { display: block; }
               @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-              /* HOME */
-              .daily-claim-box { background: rgba(255,255,255,0.8); border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+              /* HOME TAB */
+              .daily-claim-box { background: rgba(255,255,255,0.8); border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: center; }
               .days-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
               .day-box { background: white; border: 2px solid #333; border-radius: 8px; width: 12%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
               .day-box.claimed { background: #15803d; color: white; border-color: #15803d; }
-              .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 22px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s; }
-              .claim-btn:active { transform: scale(0.95); }
+              .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 22px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 
-              .task-card { background: rgba(255,255,255,0.7); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+              .task-card { background: rgba(255,255,255,0.7); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; position: relative; }
               .task-num { position: absolute; top: 15px; left: 15px; background: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; border: 2px solid #333; font-size: 20px; }
               .task-title { font-size: 24px; font-weight: 900; margin: 20px 0 10px 0; color: #2e1065; }
-              .start-btn { background: white; border: 2px solid #ddd; padding: 12px 35px; border-radius: 8px; font-size: 24px; font-weight: 900; color: #15803d; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; }
-              
+              .start-btn { background: white; border: 2px solid #ddd; padding: 12px 35px; border-radius: 8px; font-size: 24px; font-weight: 900; color: #15803d; cursor: pointer; }
+
               /* CAPTCHA */
-              .captcha-box { background: white; padding: 30px 20px; text-align: center; font-size: 28px; font-weight: 900; letter-spacing: 8px; border: 3px dashed #333; margin: 20px 0; border-radius: 10px; user-select: none; }
-              .captcha-input { width: 100%; padding: 18px; border: 2px solid #ccc; border-radius: 10px; font-size: 20px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline: none; }
-              .captcha-input:focus { border-color: #15803d; }
-              .submit-btn { background: #15803d; color: white; width: 100%; padding: 18px; border-radius: 10px; font-size: 22px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+              .captcha-box { background: white; padding: 30px 20px; text-align: center; font-size: 28px; font-weight: 900; letter-spacing: 8px; border: 3px dashed #333; margin: 20px 0; border-radius: 10px; }
+              .captcha-input { width: 100%; padding: 18px; border: 2px solid #ccc; border-radius: 10px; font-size: 20px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; }
+              .submit-btn { background: #15803d; color: white; width: 100%; padding: 18px; border-radius: 10px; font-size: 22px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom:10px; }
 
               /* QUIZ */
-              .quiz-q { background: white; padding: 25px 20px; border-radius: 10px; font-size: 20px; font-weight: 900; margin: 20px 0; border: 2px solid #ccc; line-height: 1.4; }
-              .quiz-opt { background: white; padding: 18px; border: 2px solid #ccc; border-radius: 10px; margin-bottom: 12px; font-weight: bold; display: flex; gap: 15px; cursor: pointer; font-size: 18px; align-items: center; transition: 0.2s; }
+              .quiz-q { background: white; padding: 25px 20px; border-radius: 10px; font-size: 20px; font-weight: 900; margin: 20px 0; border: 2px solid #ccc; }
+              .quiz-opt { background: white; padding: 18px; border: 2px solid #ccc; border-radius: 10px; margin-bottom: 12px; font-weight: bold; display: flex; gap: 15px; cursor: pointer; font-size: 18px; align-items: center; }
               .opt-let { font-weight: 900; background: #eee; padding: 5px 12px; border-radius: 5px; }
               .quiz-opt.correct { background: #15803d; color: white; border-color: #15803d; }
-              .quiz-opt.correct .opt-let { color: #000; }
               .quiz-opt.wrong { background: #ef4444; color: white; border-color: #ef4444; }
-              .quiz-opt.wrong .opt-let { color: #000; }
-              .quiz-exp { background: #15803d; color: white; padding: 20px; border-radius: 10px; font-weight: bold; display: none; margin-top: 20px; font-size: 18px; line-height: 1.5; }
+              .quiz-exp { background: #15803d; color: white; padding: 20px; border-radius: 10px; font-weight: bold; display: none; margin-top: 20px; font-size: 18px; }
+
+              /* PROFILE */
+              .pro-section { display: none; animation: fadeIn 0.3s ease; }
+              .pro-section.active { display: block; }
+              
+              .pro-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+              .pro-name { background: white; padding: 12px; border: 2px solid #ccc; border-radius: 8px; font-weight: bold; font-size: 20px; flex-grow: 1; text-align: center; margin: 0 10px; }
+              .icon-btn { background: white; border: 2px solid #ccc; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+              .id-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+              .id-box { background: #15803d; color: white; padding: 12px 20px; border-radius: 8px; font-weight: bold; font-size: 18px; }
+              
+              .pro-wallet { background: #2e1065; color: white; text-align: center; padding: 25px; border-radius: 15px; font-size: 50px; font-weight: 900; margin-bottom: 15px; }
+              .withdraw-btn-main { background: white; border: 2px solid #ccc; padding: 15px; text-align: center; font-weight: 900; border-radius: 8px; cursor: pointer; font-size: 20px; width: 70%; margin: 0 auto 20px auto; display: block; color: #000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+              
+              .menu-item { background: white; padding: 18px 20px; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 12px; font-weight: 900; font-size: 18px; display: flex; justify-content: space-between; cursor: pointer; }
+              .social-row { display: flex; justify-content: space-around; margin-top: 20px; }
+              .social-cir { background: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; border: 2px solid #ccc; font-size: 18px; }
+
+              /* WITHDRAWAL FORM */
+              .w-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+              .w-tab { flex: 1; background: white; text-align: center; padding: 15px; border: 2px solid #ccc; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 18px; }
+              .w-tab.active { background: #e5e7eb; }
+              .w-input { width: 100%; padding: 18px; margin-bottom: 12px; border: 2px solid #ccc; border-radius: 8px; font-weight: bold; box-sizing: border-box; font-size: 18px; }
+
+              /* TRANSACTIONS */
+              .tx-box { padding: 18px; border-radius: 8px; border: 2px solid #ccc; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: 900; font-size: 16px; align-items: center; }
+              .tx-suc { background: #15803d; color: white; border-color: #15803d; }
+              .tx-pen { background: #9ca3af; color: white; border-color: #9ca3af; }
+              .tx-amt { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; }
 
               /* BOTTOM NAV */
               .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; display: flex; justify-content: space-around; padding: 15px 0; border-top: 2px solid #e5e7eb; z-index: 1000; }
@@ -139,121 +168,176 @@ jobs:
                 </div>
                 <button class="claim-btn" onclick="claimDaily()">CLAIM NOW</button>
               </div>
-
               <div class="task-card">
-                <div class="task-num">1</div>
-                <div class="task-title">Solve Captcha</div>
+                <div class="task-num">1</div><div class="task-title">Solve Captcha</div>
                 <div class="start-btn" onclick="openCaptcha()">▶ START</div>
               </div>
               <div class="task-card">
-                <div class="task-num">2</div>
-                <div class="task-title">Play Quiz</div>
+                <div class="task-num">2</div><div class="task-title">Play Quiz</div>
                 <div class="start-btn" onclick="openQuiz()">▶ START</div>
               </div>
             </div>
 
             <!-- CAPTCHA TAB -->
             <div id="tab-captcha" class="tab-content">
-              <h2 style="text-align:center;">Solve Captcha</h2>
               <div class="captcha-box" id="capText">A7X9P</div>
-              <input type="text" class="captcha-input" id="capInput" placeholder="Enter text here">
-              <button class="submit-btn" onclick="submitCaptcha()">SUBMIT CAPTCHA</button>
-              <button class="submit-btn" style="background:#6b7280; margin-top:15px;" onclick="nav('home')">BACK TO HOME</button>
+              <input type="text" class="captcha-input" id="capInput" placeholder="CAPTCHA TEXT ENTER BOX">
+              <button class="submit-btn" onclick="submitCaptcha()">SUBMIT</button>
+              <button class="submit-btn" style="background:#6b7280;" onclick="nav('home')">BACK TO HOME</button>
             </div>
 
             <!-- QUIZ TAB -->
             <div id="tab-quiz" class="tab-content">
-              <h2 style="text-align:center;">GK Quiz</h2>
-              <div class="quiz-q" id="qText">Loading Question...</div>
+              <div class="quiz-q" id="qText">QUESTION TEXT HERE</div>
               <div id="opts"></div>
               <div class="quiz-exp" id="qExp"></div>
               <button class="submit-btn" style="background:#6b7280; margin-top:20px;" onclick="nav('home')">EXIT QUIZ</button>
             </div>
 
+            <!-- PROFILE TAB (Contains 3 sections) -->
+            <div id="tab-profile" class="tab-content">
+              
+              <!-- 1. MAIN PROFILE -->
+              <div id="sec-pro-main" class="pro-section active">
+                <div class="pro-header">
+                  <div class="icon-btn">👤</div><div class="pro-name">VIKASH RAJU</div><div class="icon-btn">📞</div>
+                </div>
+                <div class="id-row">
+                  <div class="id-box">ID : 381130</div><div class="id-box" style="cursor:pointer;" onclick="alert('Copied!')">COPY</div>
+                </div>
+                <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
+                <div class="withdraw-btn-main" onclick="openWithdraw()">WITHDRAWAL</div>
+
+                <div class="menu-item" onclick="alert('Change Password')">CHANGE PASSWORD</div>
+                <div class="menu-item">ABOUT US <span>➜</span></div>
+                <div class="menu-item">PRIVACY POLICY <span>➜</span></div>
+                <div class="menu-item">TERM AND CONDITION <span>➜</span></div>
+
+                <div class="social-row">
+                  <div class="social-cir">INS</div><div class="social-cir">YT</div><div class="social-cir">FB</div><div class="social-cir">WA</div>
+                </div>
+              </div>
+
+              <!-- 2. WITHDRAW FORM -->
+              <div id="sec-pro-withdraw" class="pro-section">
+                <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
+                <div class="withdraw-btn-main">WITHDRAWAL</div>
+                
+                <div class="w-tabs">
+                  <div class="w-tab active" id="tabBank" onclick="selW('bank')">BANK 🏦</div>
+                  <div class="w-tab" id="tabUpi" onclick="selW('upi')">UPI ID</div>
+                </div>
+                
+                <div id="w-form-bank">
+                  <input type="text" class="w-input" placeholder="SELECT BANK">
+                  <input type="text" class="w-input" placeholder="ACCOUNT HOLDER NAME">
+                  <input type="number" class="w-input" placeholder="ACCOUNT NUMBER">
+                  <input type="text" class="w-input" placeholder="IFSC CODE">
+                </div>
+                
+                <div id="w-form-upi" style="display:none;">
+                  <input type="text" class="w-input" placeholder="ACCOUNT HOLDER NAME">
+                  <input type="text" class="w-input" placeholder="UPI ID">
+                </div>
+                
+                <input type="number" class="w-input" placeholder="Amount (e.g. 12.50)" style="border-color:#2e1065; margin-top:10px;">
+                
+                <button class="submit-btn" style="background:#2e1065;" onclick="alert('Request Sent!')">WITHDRAW</button>
+                <div class="withdraw-btn-main" style="width:100%; border:none; box-shadow:0 0 8px #ccc;" onclick="openTx()">RECENT TRANSACTIONS</div>
+                <button class="submit-btn" style="background:#6b7280;" onclick="showProSec('sec-pro-main')">BACK</button>
+              </div>
+
+              <!-- 3. TRANSACTIONS -->
+              <div id="sec-pro-tx" class="pro-section">
+                <div class="pro-wallet">🪙 <span class="bal-txt">12.5</span></div>
+                <div class="withdraw-btn-main">WITHDRAWAL</div>
+                <div class="withdraw-btn-main" style="width:100%; border:none; box-shadow:0 0 8px #ccc;">RECENT TRANSACTIONS</div>
+
+                <div class="tx-box tx-pen">WITHDRAWAL PENDING <span class="tx-amt">🪙 12.5</span></div>
+                <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 60</span></div>
+                <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 147</span></div>
+                <div class="tx-box tx-suc">WITHDRAWAL SUCCESSFULL <span class="tx-amt">🪙 134</span></div>
+                
+                <button class="submit-btn" style="background:#6b7280; margin-top:15px;" onclick="openWithdraw()">BACK TO WITHDRAW</button>
+              </div>
+            </div>
+
             <!-- BOTTOM NAV -->
             <div class="bottom-nav">
               <div class="nav-icon active" id="nav-home" onclick="nav('home')">🏠</div>
-              <div class="nav-icon" id="nav-ad" onclick="nav('ad')">📺</div>
-              <div class="nav-icon" id="nav-profile" onclick="alert('Profile Coming Soon!')">👤</div>
+              <div class="nav-icon" id="nav-ad" onclick="nav('ad')">▶</div>
+              <div class="nav-icon" id="nav-profile" onclick="nav('profile')">👤</div>
             </div>
 
             <script>
-              // JAVASCRIPT LOGIC
-              let bal = 12.5;
-              let dailyClaimed = false;
-
+              let bal = 12.5; let claimed = false;
               function updateBal() {
                 document.getElementById('mainBal').innerText = bal.toFixed(1);
+                document.querySelectorAll('.bal-txt').forEach(el => el.innerText = bal.toFixed(1));
               }
 
-              // Navigation
+              // TAB NAVIGATION
               function nav(tab) {
                 if(tab === 'ad') {
-                  // Direct call to Android Native Code for Unity Ads
-                  if(typeof AndroidApp !== 'undefined') {
-                    AndroidApp.showUnityAd('Rewarded_Android');
-                  } else {
-                    alert("Ads will play in the APK version!");
-                  }
+                  if(typeof AndroidApp !== 'undefined') AndroidApp.showUnityAd('Rewarded_Android');
+                  else alert("Ads will play in real App!");
                   return;
                 }
-                
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
+                document.getElementById('tab-' + tab).classList.add('active');
+                document.getElementById('nav-' + tab).classList.add('active');
                 
-                if(tab === 'home' || tab === 'captcha' || tab === 'quiz') {
-                  document.getElementById('tab-' + tab).classList.add('active');
-                }
-                if(tab === 'home') document.getElementById('nav-home').classList.add('active');
+                // Reset Profile to main view when clicked
+                if(tab === 'profile') showProSec('sec-pro-main');
               }
 
-              // Daily Claim
+              // PROFILE NAVIGATION
+              function showProSec(id) {
+                document.querySelectorAll('.pro-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+              }
+              function openWithdraw() { showProSec('sec-pro-withdraw'); }
+              function openTx() { showProSec('sec-pro-tx'); }
+              function selW(type) {
+                document.getElementById('tabBank').classList.remove('active');
+                document.getElementById('tabUpi').classList.remove('active');
+                document.getElementById('w-form-bank').style.display = 'none';
+                document.getElementById('w-form-upi').style.display = 'none';
+                if(type === 'bank') {
+                  document.getElementById('tabBank').classList.add('active');
+                  document.getElementById('w-form-bank').style.display = 'block';
+                } else {
+                  document.getElementById('tabUpi').classList.add('active');
+                  document.getElementById('w-form-upi').style.display = 'block';
+                }
+              }
+
+              // DAILY CLAIM
               function claimDaily() {
-                if(dailyClaimed) {
-                  alert("You have already claimed today's bonus!");
-                  return;
-                }
-                bal += 5.0; 
-                updateBal(); 
-                dailyClaimed = true;
+                if(claimed) { alert("Already claimed!"); return; }
+                bal += 5.0; updateBal(); claimed = true;
                 document.querySelectorAll('.day-box')[0].classList.add('claimed');
-                alert("Daily Bonus Claimed! +5.0 Coins");
+                alert("Claimed +5 Coins!");
               }
 
-              // Captcha
+              // CAPTCHA
               let curCap = "";
               function genCap() {
-                const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; 
-                curCap = "";
+                const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; curCap = "";
                 for(let i=0; i<6; i++) curCap += c.charAt(Math.floor(Math.random()*c.length));
                 document.getElementById('capText').innerText = curCap;
                 document.getElementById('capInput').value = "";
               }
-              function openCaptcha() { 
-                nav('captcha'); 
-                genCap(); 
-              }
+              function openCaptcha() { nav('captcha'); genCap(); }
               function submitCaptcha() {
-                let input = document.getElementById('capInput').value.trim().toUpperCase();
-                if(input === curCap) {
-                  bal += 1.5; 
-                  updateBal(); 
-                  alert("Correct! +1.5 Coins added."); 
-                  nav('home');
-                } else { 
-                  alert("Wrong Captcha! Try again."); 
-                  genCap(); 
-                }
+                if(document.getElementById('capInput').value.trim().toUpperCase() === curCap) {
+                  bal += 1.5; updateBal(); alert("Correct! +1.5 Coins"); nav('home');
+                } else { alert("Wrong!"); genCap(); }
               }
 
-              // Quiz
-              const qData = { 
-                q: "What is the capital of India?", 
-                o: ["Mumbai", "New Delhi", "Chennai", "Kolkata"], 
-                a: 1, 
-                e: "New Delhi is the capital of India." 
-              };
-              
+              // QUIZ
+              const qData = { q: "Which city is known as Pink City?", o: ["Jaipur", "Mumbai", "Delhi", "Agra"], a: 0, e: "Jaipur is famously known as the Pink City of India." };
               function openQuiz() {
                 nav('quiz');
                 document.getElementById('qText').innerText = qData.q;
@@ -265,18 +349,16 @@ jobs:
                 });
                 document.getElementById('opts').innerHTML = oHtml;
               }
-              
               function checkQ(idx) {
                 document.getElementById('qo_'+qData.a).classList.add('correct');
                 if(idx === qData.a) {
-                  bal += 2.0; 
-                  updateBal();
-                  document.getElementById('qExp').innerHTML = `✓ CORRECT!<br>${qData.e}`;
+                  bal += 2.0; updateBal();
+                  document.getElementById('qExp').innerHTML = `✓ CORRECT ANSER!<br>${qData.e}`;
                   document.getElementById('qExp').style.display = 'block';
                   setTimeout(()=> { nav('home'); }, 2000);
                 } else {
                   document.getElementById('qo_'+idx).classList.add('wrong');
-                  document.getElementById('qExp').innerHTML = `<span style="color:#ffb3b3;">✗ WRONG ANSWER</span><br>${qData.e}`;
+                  document.getElementById('qExp').innerHTML = `<span style="color:#ffb3b3;">⬟ WRONG ANSER</span><br>${qData.e}`;
                   document.getElementById('qExp').style.display = 'block';
                   setTimeout(()=> { nav('home'); }, 3000);
                 }
@@ -285,9 +367,39 @@ jobs:
           </body>
           </html>
           EOF
-          # ==========================================
 
-          # THEME (No Action Bar, Light Status Bar)
+          # LAYOUT WITH SPLASH SCREEN OVERLAY
+          cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#ffffff">
+
+              <WebView
+                  android:id="@+id/webView"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:visibility="gone" />
+
+              <VideoView
+                  android:id="@+id/splashVideo"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:layout_gravity="center" />
+
+              <ImageView
+                  android:id="@+id/splashLogo"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:src="@drawable/app_icon"
+                  android:scaleType="centerCrop"
+                  android:background="#ffffff" />
+
+          </FrameLayout>
+          EOF
+
+          # THEME
           cat << 'EOF' > app/src/main/res/values/styles.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
@@ -303,11 +415,9 @@ jobs:
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <!-- INTERNET is only used for Unity Ads -->
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
-              
-              <application android:label="Earnzio" android:theme="@style/Theme.App" android:usesCleartextTraffic="true">
+              <application android:label="Earnzio" android:icon="@drawable/app_icon" android:theme="@style/Theme.App" android:usesCleartextTraffic="true">
                   <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -318,17 +428,22 @@ jobs:
           </manifest>
           EOF
 
-          # MAIN ACTIVITY - LOADS ONLY LOCAL OFFLINE ASSETS
+          # MAIN ACTIVITY - NATIVE SPLASH SCREEN + OFFLINE ASSETS
           cat << 'EOF' > app/src/main/java/com/earnzio/app/MainActivity.java
           package com.earnzio.app;
           
           import android.app.Activity;
           import android.content.Context;
+          import android.media.MediaPlayer;
+          import android.net.Uri;
           import android.os.Bundle;
+          import android.view.View;
           import android.webkit.JavascriptInterface;
           import android.webkit.WebSettings;
           import android.webkit.WebView;
+          import android.widget.ImageView;
           import android.widget.Toast;
+          import android.widget.VideoView;
           import androidx.appcompat.app.AppCompatActivity;
           import com.unity3d.ads.IUnityAdsInitializationListener;
           import com.unity3d.ads.IUnityAdsLoadListener;
@@ -338,33 +453,57 @@ jobs:
 
           public class MainActivity extends AppCompatActivity {
               private WebView webView;
+              private VideoView splashVideo;
+              private ImageView splashLogo;
               private String unityGameID = "YOUR_UNITY_GAME_ID_HERE"; 
               
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
+                  setContentView(R.layout.activity_main);
                   
-                  webView = new WebView(this);
-                  setContentView(webView);
+                  webView = findViewById(R.id.webView);
+                  splashVideo = findViewById(R.id.splashVideo);
+                  splashLogo = findViewById(R.id.splashLogo);
                   
-                  // Initialize Unity Ads Native SDK
+                  // 🔥 SPLASH SCREEN LOGIC 🔥
+                  Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.splash_video);
+                  splashVideo.setVideoURI(videoUri);
+                  
+                  splashVideo.setOnPreparedListener(mp -> {
+                      mp.setLooping(false);
+                      mp.setOnInfoListener((mp1, what, extra) -> {
+                          if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                              splashLogo.setVisibility(View.GONE); // Hide Logo when video starts
+                              return true;
+                          }
+                          return false;
+                      });
+                      splashVideo.start();
+                  });
+                  
+                  // When Video Ends -> Hide Splash, Show App
+                  splashVideo.setOnCompletionListener(mp -> {
+                      splashVideo.setVisibility(View.GONE);
+                      splashLogo.setVisibility(View.GONE);
+                      webView.setVisibility(View.VISIBLE);
+                  });
+                  
+                  // UNITY ADS
                   UnityAds.initialize(getApplicationContext(), unityGameID, false, new IUnityAdsInitializationListener() {
                       @Override public void onInitializationComplete() {}
                       @Override public void onInitializationFailed(UnityAds.UnityAdsInitializationError error, String message) {}
                   });
                   
+                  // WEBVIEW SETUP
                   WebSettings webSettings = webView.getSettings();
                   webSettings.setJavaScriptEnabled(true);
                   webSettings.setDomStorageEnabled(true);
                   
-                  // Interface linking JS to Native Java
                   webView.addJavascriptInterface(new WebAppInterface(this), "AndroidApp");
-                  
-                  // 🔥 LOADS THE OFFLINE HTML FILE (NO WEBSITE LINK) 🔥
                   webView.loadUrl("file:///android_asset/index.html");
               }
 
-              // Class to handle JS calls
               public class WebAppInterface {
                   Context mContext;
                   WebAppInterface(Context c) { mContext = c; }
@@ -380,13 +519,12 @@ jobs:
                                       @Override public void onUnityAdsShowStart(String placementId) {}
                                       @Override public void onUnityAdsShowClick(String placementId) {}
                                       @Override public void onUnityAdsShowComplete(String placementId, UnityAds.UnityAdsShowCompletionState state) {
-                                          // Reward logic after Ad finishes
                                           Toast.makeText(mContext, "Coins Added!", Toast.LENGTH_SHORT).show();
                                       }
                                   });
                               }
                               @Override public void onUnityAdsFailedToLoad(String placementId, UnityAds.UnityAdsLoadError error, String message) {
-                                  Toast.makeText(mContext, "Loading Ad... Please wait", Toast.LENGTH_SHORT).show();
+                                  Toast.makeText(mContext, "Ad Failed to Load", Toast.LENGTH_SHORT).show();
                               }
                           });
                       });
@@ -395,11 +533,11 @@ jobs:
           }
           EOF
 
-      - name: Build Standalone APK
+      - name: Build Pro APK
         run: gradle :app:assembleDebug
 
-      - name: Upload Standalone APK
+      - name: Upload Pro APK
         uses: actions/upload-artifact@v4
         with:
-          name: EARNZIO-OFFLINE-APK
+          name: EARNZIO-PRO-APK
           path: app/build/outputs/apk/debug/app-debug.apk
