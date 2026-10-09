@@ -134,6 +134,10 @@ jobs:
               .captcha-input { width: 100%; padding: 15px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline:none; }
               
               /* YOUTUBE WATCH TAB */
+              .cat-scroll { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 15px; }
+              .cat-scroll::-webkit-scrollbar { display: none; }
+              .cat-btn { background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 5px rgba(2,132,199,0.3); transition: 0.2s; }
+              .cat-btn:active { transform: scale(0.95); }
               .yt-search-container { display: flex; gap: 10px; margin-bottom: 15px; }
               .yt-search-input { flex: 1; padding: 12px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; background: white; }
               .yt-search-btn { background: #ef4444; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 900; font-size: 16px; cursor: pointer; }
@@ -177,8 +181,7 @@ jobs:
                   projectId: 'earnzio-in', 
                   storageBucket: 'earnzio-in.firebasestorage.app', 
                   messagingSenderId: '935935737332', 
-                  appId: '1:935935737332:web:70bc35401fb05995274da1', 
-                  measurementId: 'G-BGW0EW7312'
+                  appId: '1:935935737332:web:70bc35401fb05995274da1'
               };
 
               const app = initializeApp(firebaseConfig);
@@ -190,9 +193,8 @@ jobs:
               let currentCoins = 0;
               let isRegistering = false; 
 
-              // Init App
+              // Init App directly waiting for Java to complete Splash
               document.getElementById('authTitle').innerText = "LOGIN";
-              document.getElementById('auth-screen').style.display = 'flex';
               
               onAuthStateChanged(auth, (user) => {
                 if (isRegistering) return; 
@@ -235,10 +237,7 @@ jobs:
                 const dummyEmail = mobile + "@earnzio.app";
 
                 if(type === 'login') {
-                  // FAST LOGIN FIX
-                  signInWithEmailAndPassword(auth, dummyEmail, pass).then(() => {
-                      // onAuthStateChanged will handle the rest instantly
-                  }).catch((e) => {
+                  signInWithEmailAndPassword(auth, dummyEmail, pass).catch((e) => {
                       document.getElementById('globalSpinner').style.display = 'none';
                       if(e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
                           showProAlert("Login Failed", "User not found or Incorrect Details! Please try again or Register.");
@@ -266,7 +265,7 @@ jobs:
                               successMsg += "<div style='margin-bottom:5px;'><b style='color:#0284c7;'>Your ID:</b> <span style='color:#333;'>" + randomId + "</span></div>";
                               successMsg += "<div><b style='color:#0284c7;'>Password:</b> <span style='color:#333;'>" + pass + "</span></div>";
                               successMsg += "</div>";
-                              successMsg += "<div style='color:#333; font-weight:bold;'>Please Login to continue.</div>";
+                              successMsg += "<div style='color:#333; font-weight:500;'>Please Login to continue.</div>";
                               
                               showProAlert(titleHtml, successMsg, () => {
                                   isRegistering = false;
@@ -331,18 +330,17 @@ jobs:
                 });
               };
               
-              // Auto-load some videos on Watch tab opening
+              // 🔴 YOUTUBE CATEGORY & SEARCH LOGIC WITH YOUR API KEY 🔴
               let videosLoaded = false;
               
-              window.loadInitialVideos = function() {
-                  if(videosLoaded) return;
-                  const query = "Telugu Comedy Scenes Latest"; // Default search query
+              window.fetchCategory = function(query) {
+                  // USING YOUR API KEY HERE
                   const apiKey = 'AIzaSyAw9lHkqgKlYl-y7bT5Q1QBNvZoCuE7xNU';
                   const maxResults = 10;
                   const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoEmbeddable=true&relevanceLanguage=te&maxResults=${maxResults}&key=${apiKey}`;
 
                   document.getElementById('globalSpinner').style.display = 'flex';
-                  document.getElementById('spinnerText').innerText = 'Loading videos...';
+                  document.getElementById('spinnerText').innerText = 'Loading Videos...';
 
                   fetch(searchUrl)
                     .then(response => response.json())
@@ -385,14 +383,42 @@ jobs:
                         videosLoaded = true;
 
                       } else {
-                        container.innerHTML = '<p style="color: #000; text-align: center; padding: 20px;">No videos found.</p>';
+                        container.innerHTML = '<p style="color: #334155; text-align: center; padding: 20px; font-weight: bold;">No videos found.</p>';
                       }
                     })
                     .catch(error => {
                       document.getElementById('globalSpinner').style.display = 'none';
-                      console.error('Error fetching YouTube data:', error);
-                      showProAlert("Error", "Could not fetch videos. Please check your connection or try again later.");
+                      showProAlert("Error", "Could not fetch videos. Please check your API Quota or connection.");
                     });
+              }
+
+              window.searchYoutube = function() {
+                  const query = document.getElementById('ytSearchBox').value.trim();
+                  if(query) {
+                      fetchCategory(query);
+                  }
+              }
+
+              window.playVideo = function(videoId) {
+                  const playerArea = document.getElementById('playerArea');
+                  const listArea = document.getElementById('listArea');
+                  const mainPlayer = document.getElementById('mainPlayer');
+                  
+                  listArea.style.display = 'none';
+                  playerArea.style.display = 'block';
+                  
+                  // Base URL in Android fixes Error 153. Origin parameter makes it safe.
+                  mainPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&origin=https://earnzio.com`;
+              }
+
+              window.closePlayer = function() {
+                  const playerArea = document.getElementById('playerArea');
+                  const listArea = document.getElementById('listArea');
+                  const mainPlayer = document.getElementById('mainPlayer');
+                  
+                  mainPlayer.src = '';
+                  playerArea.style.display = 'none';
+                  listArea.style.display = 'block';
               }
             </script>
           </head>
@@ -411,6 +437,7 @@ jobs:
               <div class="spinner-text" id="spinnerText">Please wait...</div>
             </div>
 
+            <!-- AUTH SCREEN -->
             <div id="auth-screen">
               <div class="auth-container">
                 <div class="auth-title" id="authTitle">LOGIN</div>
@@ -428,6 +455,7 @@ jobs:
               </div>
             </div>
 
+            <!-- MAIN APP -->
             <div id="main-app">
               <div class="top-bar"><div class="coin-box">🪙 <span class="bal-txt">0.0</span></div></div>
 
@@ -453,11 +481,21 @@ jobs:
                 <button class="submit-btn" style="background:#0284c7;" onclick="nav('home')">BACK TO HOME</button>
               </div>
 
+              <!-- 🔴 WATCH TAB (CATEGORIES WITH YOUR API KEY) 🔴 -->
               <div id="tab-watch" class="tab-content">
+                <div class="cat-scroll">
+                  <button class="cat-btn" onclick="fetchCategory('Telugu Movies Latest')">🍿 Movies</button>
+                  <button class="cat-btn" onclick="fetchCategory('Telugu News Live')">📰 News</button>
+                  <button class="cat-btn" onclick="fetchCategory('Telugu Comedy Scenes')">😂 Comedy</button>
+                  <button class="cat-btn" onclick="fetchCategory('Telugu Sports')">🏏 Sports</button>
+                  <button class="cat-btn" onclick="fetchCategory('Telugu Vlogs')">📹 Vlogs</button>
+                </div>
+                
                 <div class="yt-search-container">
                   <input type="text" id="ytSearchBox" class="yt-search-input" placeholder="Search YouTube Videos...">
                   <button class="yt-search-btn" onclick="searchYoutube()">Search</button>
                 </div>
+                
                 <div class="yt-result-container" id="video-container">
                   <!-- Videos will be loaded here dynamically -->
                 </div>
@@ -515,11 +553,11 @@ jobs:
               let isLogin = true;
               function toggleAuthMode() {
                 isLogin = !isLogin;
-                document.getElementById('authTitle').innerText = isLogin ? "LOGIN" : "REGISTER";
-                document.getElementById('authBtn').innerText = isLogin ? "LOGIN TO ACCOUNT" : "CREATE ACCOUNT";
-                document.getElementById('authBtn').setAttribute('onclick', isLogin ? "doAuth('login')" : "doAuth('register')");
-                document.getElementById('authSwitch').innerText = isLogin ? "Don't have an account? Register Here" : "Already have an account? Login";
-                document.getElementById('authName').style.display = isLogin ? "none" : "block";
+                document.getElementById('authTitle').innerText = isLogin ? "REGISTER" : "LOGIN";
+                document.getElementById('authBtn').innerText = isLogin ? "CREATE ACCOUNT" : "LOGIN TO ACCOUNT";
+                document.getElementById('authBtn').setAttribute('onclick', isLogin ? "doAuth('register')" : "doAuth('login')");
+                document.getElementById('authSwitch').innerText = isLogin ? "Already have an account? Login" : "Don't have an account? Register Here";
+                document.getElementById('authName').style.display = isLogin ? "block" : "none";
               }
 
               function togglePassword() {
@@ -539,8 +577,9 @@ jobs:
                   document.getElementById('nav-' + tab).classList.add('active');
                 }
                 
-                if(tab === 'watch') {
-                   loadInitialVideos();
+                if(tab === 'watch' && !videosLoaded) {
+                   // Auto load first category when watch tab is opened
+                   fetchCategory('Telugu Movies Latest');
                 }
               }
 
@@ -568,86 +607,6 @@ jobs:
                 }
               }
 
-              function searchYoutube() {
-                const query = document.getElementById('ytSearchBox').value.trim();
-                if(!query) return;
-                
-                const apiKey = 'AIzaSyAw9lHkqgKlYl-y7bT5Q1QBNvZoCuE7xNU';
-                const maxResults = 10;
-                const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoEmbeddable=true&relevanceLanguage=te&maxResults=${maxResults}&key=${apiKey}`;
-
-                document.getElementById('globalSpinner').style.display = 'flex';
-                document.getElementById('spinnerText').innerText = 'Searching videos...';
-
-                fetch(searchUrl)
-                  .then(response => response.json())
-                  .then(data => {
-                    document.getElementById('globalSpinner').style.display = 'none';
-                    const container = document.getElementById('video-container');
-                    container.innerHTML = ''; 
-
-                    if (data.items && data.items.length > 0) {
-                      let htmlContent = '<div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">';
-                      data.items.forEach(item => {
-                        const videoId = item.id.videoId;
-                        const title = item.snippet.title;
-                        const thumbnail = item.snippet.thumbnails.medium.url;
-                        
-                        htmlContent += `
-                          <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; border: 1px solid #bae6fd;" onclick="playVideo('${videoId}')">
-                            <img src="${thumbnail}" style="width: 100%; height: auto; display: block;">
-                            <div style="padding: 10px; font-weight: bold; color: #0369a1; font-size: 14px;">${title}</div>
-                          </div>
-                        `;
-                      });
-                      htmlContent += '</div>';
-                      
-                      const playerArea = document.createElement('div');
-                      playerArea.id = 'playerArea';
-                      playerArea.style.display = 'none';
-                      playerArea.innerHTML = `
-                          <iframe id="mainPlayer" class="yt-frame" src="" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-                          <button class="submit-btn" style="background:#ef4444; border-radius:0 0 8px 8px; margin:0;" onclick="closePlayer()">Close Player</button>
-                      `;
-                      
-                      container.appendChild(playerArea);
-                      
-                      const listArea = document.createElement('div');
-                      listArea.id = 'listArea';
-                      listArea.innerHTML = htmlContent;
-                      container.appendChild(listArea);
-
-                    } else {
-                      container.innerHTML = '<p style="color: #000; text-align: center; padding: 20px;">No videos found.</p>';
-                    }
-                  })
-                  .catch(error => {
-                    document.getElementById('globalSpinner').style.display = 'none';
-                    showProAlert("Error", "Could not fetch videos. Please check your connection or try again later.");
-                  });
-              }
-
-              window.playVideo = function(videoId) {
-                  const playerArea = document.getElementById('playerArea');
-                  const listArea = document.getElementById('listArea');
-                  const mainPlayer = document.getElementById('mainPlayer');
-                  
-                  listArea.style.display = 'none';
-                  playerArea.style.display = 'block';
-                  
-                  mainPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&origin=https://earnzio.com`;
-              }
-
-              window.closePlayer = function() {
-                  const playerArea = document.getElementById('playerArea');
-                  const listArea = document.getElementById('listArea');
-                  const mainPlayer = document.getElementById('mainPlayer');
-                  
-                  mainPlayer.src = '';
-                  playerArea.style.display = 'none';
-                  listArea.style.display = 'block';
-              }
-
               let curCap = "";
               function genCap() {
                 const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; curCap = "";
@@ -666,7 +625,7 @@ jobs:
           </html>
           EOF
 
-          # LAYOUT
+          # LAYOUT (NO LOGO IMAGE, ONLY VIDEO)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -730,6 +689,8 @@ jobs:
           import android.webkit.WebViewClient;
           import android.widget.VideoView;
           import androidx.appcompat.app.AppCompatActivity;
+          import java.io.InputStream;
+          import java.util.Scanner;
 
           public class MainActivity extends AppCompatActivity {
               private WebView webView;
@@ -761,7 +722,16 @@ jobs:
                   webSettings.setMediaPlaybackRequiresUserGesture(false); 
                   
                   webView.setWebViewClient(new WebViewClient());
-                  webView.loadUrl("file:///android_asset/index.html");
+                  
+                  try {
+                      InputStream is = getAssets().open("index.html");
+                      Scanner s = new Scanner(is).useDelimiter("\\A");
+                      String html = s.hasNext() ? s.next() : "";
+                      // This Base URL specifically allows YouTube Embeds to bypass Security Error 153/152
+                      webView.loadDataWithBaseURL("https://earnzio.com", html, "text/html", "UTF-8", null);
+                  } catch (Exception e) {
+                      e.printStackTrace();
+                  }
               }
           }
           EOF
