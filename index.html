@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+  <title>Earnzio Pro</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+    body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%); background-attachment: fixed; color: #000; user-select: none; -webkit-user-select: none; }
+    #customAlert { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+    .alert-box { background: white; padding: 25px 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: scaleUp 0.3s ease; }
+    @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .alert-title { font-size: 20px; font-weight: 900; margin-bottom: 15px; color: #0284c7; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .alert-msg { font-size: 15px; color: #333; margin-bottom: 20px; line-height: 1.6; font-weight: 500; }
+    .alert-btn { background: #0284c7; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; }
+    #globalSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+    .spinner { width: 45px; height: 45px; border: 4px solid #bae6fd; border-top-color: #0284c7; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-text { margin-top: 15px; font-weight: 900; color: #0284c7; font-size: 16px; }
+    #auth-screen { display: none; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 30px; box-sizing: border-box; }
+    .auth-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; text-align: center; }
+    .auth-title { font-size: 32px; font-weight: 900; color: #e2e8f0; margin-bottom: 20px; text-transform: uppercase; text-shadow: 1px 1px 2px #94a3b8; }
+    .input-wrapper { position: relative; width: 100%; }
+    .auth-input { width: 100%; padding: 18px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; background: white; font-weight: 500; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .auth-input:focus { border-color: #0284c7; }
+    .eye-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: #cbd5e1; }
+    .auth-btn { background: #f8fafc; color: #0284c7; width: 100%; padding: 18px; border: none; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s; margin-top: 10px; }
+    .auth-btn:active { transform: scale(0.98); }
+    .auth-switch { color: #e2e8f0; font-weight: 500; cursor: pointer; font-size: 14px; margin-top: 10px; text-shadow: 1px 1px 1px #94a3b8; }
+    #main-app { display: none; padding-bottom: 80px; height: 100vh; overflow-y: auto; }
+    .top-bar { display: flex; justify-content: flex-end; padding: 15px; }
+    .coin-box { background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 900; font-size: 18px; color: #059669; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .tab-content { display: none; padding: 10px; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+    .daily-claim-box { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .days-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    .day-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; width: 12%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; color:#64748b; }
+    .day-box.claimed { background: #059669; color: white; border-color: #059669; }
+    .claim-btn { background: #ef4444; color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: 900; cursor: pointer; }
+    .task-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .task-title { font-size: 20px; font-weight: 900; margin: 10px 0; color: #334155; }
+    .start-btn { background: #f0f9ff; border: 1px solid #38bdf8; padding: 10px 30px; border-radius: 6px; font-size: 18px; font-weight: 900; color: #0284c7; cursor: pointer; }
+    .submit-btn { background: #059669; color: white; width: 100%; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: 900; border: none; cursor: pointer; margin-bottom:10px; }
+    .captcha-box { background: #f8fafc; padding: 30px 20px; text-align: center; font-size: 28px; font-family: 'Courier New', monospace; font-weight: 900; letter-spacing: 8px; border: 2px dashed #94a3b8; margin: 20px 0; border-radius: 8px; color:#334155;}
+    .captcha-input { width: 100%; padding: 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 18px; text-align: center; margin-bottom: 20px; box-sizing: border-box; font-weight: bold; outline:none; }
+    .cat-scroll { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 15px; }
+    .cat-scroll::-webkit-scrollbar { display: none; }
+    .cat-btn { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 4px rgba(2,132,199,0.3); transition: 0.2s; }
+    .cat-btn:active { transform: scale(0.95); }
+    .yt-search-container { display: none; } 
+    .yt-result-container { width: 100%; overflow: hidden; }
+    .player-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; flex-direction: column; }
+    .yt-frame { flex: 1; width: 100%; border: none; background: #000; }
+    .close-player-btn { background: #ef4444; color: white; padding: 15px; text-align: center; font-weight: 900; font-size: 18px; cursor: pointer; }
+    .pro-header { margin-bottom: 15px; }
+    .pro-name { background: white; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 900; font-size: 18px; text-align: center; color:#334155; text-transform: uppercase; margin-bottom:10px;}
+    .id-box { background: #f8fafc; color: #0284c7; padding: 10px; border-radius: 5px; font-weight: 900; text-align: center; margin-bottom: 10px; border: 1px solid #bae6fd; }
+    .pass-box { background: #fef2f2; color: #ef4444; padding: 10px; border-radius: 5px; font-weight: 900; text-align: center; margin-bottom: 15px; border: 1px solid #fca5a5; }
+    .pro-wallet { background: #0369a1; color: white; text-align: center; padding: 20px; border-radius: 10px; font-size: 45px; font-weight: 900; margin-bottom: 15px; border:3px solid #7dd3fc; }
+    .menu-item { background: white; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; cursor: pointer; color:#334155; }
+    .inline-section { display: none; background: white; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; }
+    .w-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+    .w-tab { flex: 1; background: #f8fafc; text-align: center; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 900; cursor: pointer; font-size: 14px; color:#64748b;}
+    .w-tab.active { background: #e0f2fe; border-color:#0284c7; color: #0284c7; }
+    .w-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 500; box-sizing: border-box; outline:none; }
+    .tx-box { padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 8px; display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; background:#f8fafc; color:#334155;}
+    .tx-suc { border-left: 4px solid #059669; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.98); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #e2e8f0; z-index: 1000; }
+    .nav-icon { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; color: #64748b; background: transparent; border: none; }
+    .nav-icon svg { width: 26px; height: 26px; fill: currentColor; }
+    .nav-icon.active { color: #0284c7; }
+    #updateModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 30000; justify-content: center; align-items: center; }
+    .update-box { background: white; padding: 30px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; }
+    .update-title { font-size: 24px; font-weight: 900; color: #0284c7; margin-bottom: 15px; }
+    .update-progress { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; margin-bottom: 15px; overflow: hidden; }
+    .update-bar { width: 0%; height: 100%; background: #059669; transition: width 0.5s; }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: 'AIzaSyAZLSUcRB160A4L7_Cf9erbnIBKEiRwAo4', 
+        authDomain: 'earnzio-in.firebaseapp.com', 
+        databaseURL: 'https://earnzio-in-default-rtdb.asia-southeast1.firebasedatabase.app', 
+        projectId: 'earnzio-in', 
+        storageBucket: 'earnzio-in.firebasestorage.app', 
+        messagingSenderId: '935935737332', 
+        appId: '1:935935737332:web:70bc35401fb05995274da1'
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    setPersistence(auth, browserLocalPersistence);
+
+    let currentUser = null; let currentCoins = 0; let isRegistering = false; 
+
+    // Auto Update Check Visual Simulation (For Future Setup)
+    setTimeout(() => { checkAppUpdate(); }, 500);
+    function checkAppUpdate() { checkAuthState(); }
+
+    function checkAuthState() {
+        document.getElementById('authTitle').innerText = "LOGIN";
+        onAuthStateChanged(auth, (user) => {
+          if (isRegistering) return; 
+          if (user) {
+            currentUser = user;
+            document.getElementById('globalSpinner').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            fetchUserData(user.uid);
+          } else {
+            currentUser = null;
+            document.getElementById('globalSpinner').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+          }
+        });
+    }
+
+    window.showProAlert = function(titleHtml, msgHtml, callback) {
+        document.getElementById('alertTitle').innerHTML = titleHtml;
+        document.getElementById('alertMsg').innerHTML = msgHtml;
+        document.getElementById('customAlert').style.display = 'flex';
+        document.getElementById('alertBtn').onclick = function() {
+            document.getElementById('customAlert').style.display = 'none';
+            if(callback) callback();
+        };
+    };
+
+    window.doAuth = function(type) {
+      const name = document.getElementById('authName').value.trim();
+      const mobile = document.getElementById('authMobile').value.trim();
+      const pass = document.getElementById('authPass').value.trim();
+      
+      if(!mobile || !pass) { showProAlert("Error", "Mobile Number & Password are required!"); return; }
+      if(type === 'register' && !name) { showProAlert("Error", "Please enter your Full Name!"); return; }
+      
+      document.getElementById('globalSpinner').style.display = 'flex';
+      document.getElementById('spinnerText').innerText = type === 'login' ? 'Authenticating...' : 'Creating Account...';
+
+      const dummyEmail = mobile + "@earnzio.app";
+
+      if(type === 'login') {
+        signInWithEmailAndPassword(auth, dummyEmail, pass).catch((e) => {
+            document.getElementById('globalSpinner').style.display = 'none';
+            if(e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+                showProAlert("Login Failed", "User not found or Incorrect Details! Please try again or Register.");
+            } else if (e.code === 'auth/wrong-password') {
+                showProAlert("Login Failed", "Incorrect Password! Please check and try again.");
+            } else { showProAlert("Error", e.message); }
+        });
+      } else {
+        isRegistering = true; 
+        createUserWithEmailAndPassword(auth, dummyEmail, pass)
+          .then((cred) => {
+            const randomId = "ER" + Math.floor(100000 + Math.random() * 900000);
+            set(ref(db, 'users/' + cred.user.uid), { 
+              name: name, mobile: mobile, password: pass, uniqueId: randomId, coins: 12.5, lastClaimDate: "" 
+            }).then(() => {
+                signOut(auth).then(() => {
+                    document.getElementById('globalSpinner').style.display = 'none';
+                    let titleHtml = "✅ Registration Successful!";
+                    let successMsg = "<div style='color:#333; margin-bottom:15px;'>Your account is successfully created!</div>";
+                    successMsg += "<div style='margin-bottom:15px;'><div style='margin-bottom:5px;'><b style='color:#0284c7;'>Your ID:</b> <span style='color:#333;'>" + randomId + "</span></div>";
+                    successMsg += "<div><b style='color:#0284c7;'>Password:</b> <span style='color:#333;'>" + pass + "</span></div></div>";
+                    successMsg += "<div style='color:#333; font-weight:500;'>Please Login to continue.</div>";
+                    showProAlert(titleHtml, successMsg, () => {
+                        isRegistering = false;
+                        document.getElementById('authName').value = ""; document.getElementById('authPass').value = "";
+                        if(!isLogin) toggleAuthMode(); 
+                    });
+                });
+            });
+          }).catch((e) => {
+            isRegistering = false;
+            document.getElementById('globalSpinner').style.display = 'none';
+            if(e.code === 'auth/email-already-in-use') { showProAlert("Error", "This Mobile Number is already registered! Please go to Login."); } 
+            else { showProAlert("Error", e.message); }
+          });
+      }
+    };
+
+    window.logout = function() { signOut(auth); };
+
+    function fetchUserData(uid) {
+      get(ref(db, 'users/' + uid)).then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          currentCoins = data.coins || 0;
+          document.getElementById('proName').innerText = "👤 " + data.name;
+          document.getElementById('proMobile').innerText = "📱 ID: " + (data.uniqueId ? data.uniqueId : "ER" + data.mobile.substring(0,6));
+          document.getElementById('proPassword').innerText = "🔑 Password: " + data.password;
+          updateUI();
+        }
+      });
+    }
+
+    window.addCoins = function(amount) {
+      if(!currentUser) return;
+      currentCoins += amount;
+      update(ref(db, 'users/' + currentUser.uid), { coins: currentCoins });
+      updateUI();
+    };
+
+    function updateUI() { document.querySelectorAll('.bal-txt').forEach(el => el.innerText = currentCoins.toFixed(1)); }
+
+    window.claimDaily = function() {
+      if(!currentUser) return;
+      const today = new Date().toISOString().split('T')[0];
+      get(ref(db, 'users/' + currentUser.uid + '/lastClaimDate')).then((snap) => {
+        if(snap.exists() && snap.val() === today) {
+          showProAlert("Notice", "You have already claimed today's bonus! Come back tomorrow.");
+        } else {
+          currentCoins += 5.0;
+          update(ref(db, 'users/' + currentUser.uid), { coins: currentCoins, lastClaimDate: today });
+          updateUI();
+          showProAlert("Success!", "Daily Bonus Claimed! +5 Coins added to your wallet.");
+        }
+      });
+    };
+    
+    let videosLoaded = false;
+    window.fetchCategory = function(query) {
+        const apiKey = 'AIzaSyAw9lHkqgKlYl-y7bT5Q1QBNvZoCuE7xNU';
+        const maxResults = 10;
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoEmbeddable=true&relevanceLanguage=te&maxResults=${maxResults}&key=${apiKey}`;
+
+        document.getElementById('globalSpinner').style.display = 'flex';
+        document.getElementById('spinnerText').innerText = 'Loading Videos...';
+
+        fetch(searchUrl).then(response => response.json()).then(data => {
+            document.getElementById('globalSpinner').style.display = 'none';
+            const container = document.getElementById('video-container');
+            container.innerHTML = ''; 
+
+            if (data.items && data.items.length > 0) {
+              let htmlContent = '<div style="display: grid; grid-template-columns: 1fr; gap: 15px; padding: 5px;">';
+              data.items.forEach(item => {
+                const videoId = item.id.videoId;
+                const title = item.snippet.title;
+                const channelTitle = item.snippet.channelTitle;
+                const uploadDate = new Date(item.snippet.publishedAt).toLocaleDateString();
+                const thumbnail = item.snippet.thumbnails.high.url;
+                
+                const isShort = title.toLowerCase().includes('#shorts') || title.toLowerCase().includes('short');
+                const imgAspect = isShort ? '9/16' : '16/9';
+                const imgHeight = isShort ? '250px' : 'auto';
+
+                htmlContent += `
+                  <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; border: 1px solid #e2e8f0; display:flex; flex-direction:column;" onclick="playVideo('${videoId}', ${isShort})">
+                    <img src="${thumbnail}" style="width: 100%; aspect-ratio: ${imgAspect}; height: ${imgHeight}; object-fit: cover; display: block;">
+                    <div style="padding: 15px;">
+                      <div style="font-weight: 900; color: #334155; font-size: 16px; margin-bottom: 8px; line-height:1.4;">${title}</div>
+                      <div style="font-size: 13px; color: #64748b; font-weight: 500; display:flex; justify-content:space-between;">
+                        <span>👤 ${channelTitle}</span><span>📅 ${uploadDate}</span>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              });
+              htmlContent += '</div>';
+              container.innerHTML = htmlContent;
+              videosLoaded = true;
+            } else { container.innerHTML = '<p style="color: #334155; text-align: center; padding: 20px; font-weight: bold;">No videos found.</p>'; }
+          }).catch(error => {
+            document.getElementById('globalSpinner').style.display = 'none';
+            showProAlert("Error", "Could not fetch videos. Check connection or API.");
+          });
+    }
+
+    window.playVideo = function(videoId) {
+        document.getElementById('playerWrapper').style.display = 'flex';
+        // Clean Player: modestbranding removes YT logo, rel=0 stops related videos, controls=1 allows fullscreen.
+        document.getElementById('mainPlayer').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&fs=1&controls=1&showinfo=0&iv_load_policy=3&origin=https://earnzio.com`;
+    }
+
+    window.closePlayer = function() {
+        document.getElementById('mainPlayer').src = '';
+        document.getElementById('playerWrapper').style.display = 'none';
+    }
+  </script>
+</head>
+<body>
+  <div id="updateModal">
+    <div class="update-box">
+      <div class="update-title">Updating App...</div>
+      <div style="color: #64748b; margin-bottom: 10px; font-weight: 500;">Downloading new version seamlessly. Please wait.</div>
+      <div class="update-progress"><div class="update-bar" id="updateBar"></div></div>
+      <div id="updatePercent" style="font-weight: bold; color: #059669;">0%</div>
+    </div>
+  </div>
+
+  <div id="customAlert"><div class="alert-box"><div class="alert-title" id="alertTitle">Alert</div><div class="alert-msg" id="alertMsg">Msg</div><button class="alert-btn" id="alertBtn">OK</button></div></div>
+  <div id="globalSpinner"><div class="spinner"></div><div class="spinner-text" id="spinnerText">Please wait...</div></div>
+
+  <div id="auth-screen">
+    <div class="auth-container">
+      <div class="auth-title" id="authTitle">LOGIN</div>
+      <input type="text" id="authName" class="auth-input" placeholder="Full Name" style="display:none;">
+      <input type="number" id="authMobile" class="auth-input" placeholder="Mobile Number">
+      <div class="input-wrapper">
+        <input type="password" id="authPass" class="auth-input" placeholder="Password (Min 6 chars)">
+        <span class="eye-icon" onclick="togglePassword()">👁️</span>
+      </div>
+      <button class="auth-btn" id="authBtn" onclick="doAuth('login')">LOGIN TO ACCOUNT</button>
+      <div class="auth-switch" id="authSwitch" onclick="toggleAuthMode()">Don't have an account? Register Here</div>
+    </div>
+  </div>
+
+  <div id="main-app">
+    <div class="top-bar"><div class="coin-box">🪙 <span class="bal-txt">0.0</span></div></div>
+
+    <div id="tab-home" class="tab-content active">
+      <div class="daily-claim-box">
+        <div class="days-row"><div class="day-box">1</div><div class="day-box">2</div><div class="day-box">3</div><div class="day-box">4</div><div class="day-box">5</div><div class="day-box">6</div><div class="day-box">7</div></div>
+        <button class="claim-btn" onclick="claimDaily()">CLAIM DAILY BONUS</button>
+      </div>
+      <div class="task-card"><div class="task-title">Solve Captcha</div><div class="start-btn" onclick="openCaptcha()">▶ START</div></div>
+    </div>
+
+    <div id="tab-captcha" class="tab-content">
+      <h2 style="text-align:center; color:#0369a1;">Solve Captcha</h2>
+      <div class="captcha-box" id="capText">A7X9P</div>
+      <input type="text" class="captcha-input" id="capInput" placeholder="ENTER TEXT HERE">
+      <button class="submit-btn" onclick="submitCaptcha()">SUBMIT CAPTCHA</button>
+      <button class="submit-btn" style="background:#0284c7;" onclick="nav('home')">BACK TO HOME</button>
+    </div>
+
+    <div id="tab-watch" class="tab-content">
+      <div class="cat-scroll">
+        <button class="cat-btn" onclick="fetchCategory('Telugu Trending Videos')">🔥 Trending</button>
+        <button class="cat-btn" onclick="fetchCategory('Telugu Movies Latest')">🍿 Movies</button>
+        <button class="cat-btn" onclick="fetchCategory('Telugu News Live')">📰 News</button>
+        <button class="cat-btn" onclick="fetchCategory('Telugu Comedy Scenes')">😂 Comedy</button>
+        <button class="cat-btn" onclick="fetchCategory('Telugu Sports')">🏏 Sports</button>
+        <button class="cat-btn" onclick="fetchCategory('Telugu Vlogs')">📹 Vlogs</button>
+        <button class="cat-btn" onclick="fetchCategory('Telugu Tech Updates')">💻 Tech</button>
+      </div>
+      <div class="yt-result-container" id="video-container"></div>
+    </div>
+
+    <div id="tab-profile" class="tab-content">
+      <div class="pro-header"><div class="pro-name" id="proName">👤 Name</div></div>
+      <div class="id-box" id="proMobile">📱 ID: ERXXXXXX</div>
+      <div class="pass-box" id="proPassword">🔑 Password: ******</div>
+      <div class="pro-wallet">🪙 <span class="bal-txt">0.0</span></div>
+      
+      <div class="menu-item" onclick="toggleSection('withdrawSec')">💳 WITHDRAWAL <span>▼</span></div>
+      <div id="withdrawSec" class="inline-section">
+        <div class="w-tabs"><div class="w-tab active" id="tabBank" onclick="selW('bank')">BANK 🏦</div><div class="w-tab" id="tabUpi" onclick="selW('upi')">UPI ID</div></div>
+        <div id="w-form-bank"><input type="text" class="w-input" placeholder="BANK NAME"><input type="number" class="w-input" placeholder="ACCOUNT NUMBER"></div>
+        <div id="w-form-upi" style="display:none;"><input type="text" class="w-input" placeholder="ENTER UPI ID"></div>
+        <input type="number" class="w-input" placeholder="Amount" style="border-color:#0284c7;">
+        <button class="submit-btn" onclick="showProAlert('Success', 'Withdrawal Request Submitted!')">SUBMIT</button>
+      </div>
+
+      <div class="menu-item" onclick="toggleSection('txSec')">📜 TRANSACTIONS <span>▼</span></div>
+      <div id="txSec" class="inline-section">
+        <div class="tx-box tx-pen"><span>Pending Request</span> <span>🪙 12.5</span></div>
+        <div class="tx-box tx-suc"><span>Success</span> <span>🪙 60</span></div>
+      </div>
+
+      <div class="menu-item" onclick="logout()" style="color:#ef4444; border-color:#ef4444;">🚪 LOGOUT <span>➜</span></div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-icon active" id="nav-home" onclick="nav('home')"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+      <div class="nav-icon" id="nav-watch" onclick="nav('watch')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="nav-icon" id="nav-profile" onclick="nav('profile')"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+    </div>
+  </div>
+  
+  <div id="playerWrapper" class="player-wrapper">
+      <iframe id="mainPlayer" class="yt-frame" src="" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <div class="close-player-btn" onclick="closePlayer()">Close Player</div>
+  </div>
+
+  <script>
+    let isLogin = true;
+    function toggleAuthMode() {
+      isLogin = !isLogin;
+      document.getElementById('authTitle').innerText = isLogin ? "LOGIN" : "REGISTER";
+      document.getElementById('authBtn').innerText = isLogin ? "LOGIN TO ACCOUNT" : "CREATE ACCOUNT";
+      document.getElementById('authBtn').setAttribute('onclick', isLogin ? "doAuth('login')" : "doAuth('register')");
+      document.getElementById('authSwitch').innerText = isLogin ? "Don't have an account? Register Here" : "Already have an account? Login";
+      document.getElementById('authName').style.display = isLogin ? "none" : "block";
+    }
+
+    function togglePassword() {
+      const passInput = document.getElementById('authPass');
+      if (passInput.type === "password") passInput.type = "text";
+      else passInput.type = "password";
+    }
+
+    function nav(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      if(tab === 'home' || tab === 'watch' || tab === 'profile') document.getElementById('nav-' + tab).classList.add('active');
+      if(tab === 'watch' && !videosLoaded) fetchCategory('Telugu Trending Videos');
+    }
+
+    function toggleSection(id) {
+      const sec = document.getElementById(id);
+      if(sec.style.display === 'block') sec.style.display = 'none';
+      else {
+        document.getElementById('withdrawSec').style.display = 'none';
+        document.getElementById('txSec').style.display = 'none';
+        sec.style.display = 'block';
+      }
+    }
+
+    function selW(type) {
+      document.getElementById('tabBank').classList.remove('active');
+      document.getElementById('tabUpi').classList.remove('active');
+      document.getElementById('w-form-bank').style.display = 'none';
+      document.getElementById('w-form-upi').style.display = 'none';
+      if(type === 'bank') {
+        document.getElementById('tabBank').classList.add('active');
+        document.getElementById('w-form-bank').style.display = 'block';
+      } else {
+        document.getElementById('tabUpi').classList.add('active');
+        document.getElementById('w-form-upi').style.display = 'block';
+      }
+    }
+
+    let curCap = "";
+    function genCap() {
+      const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; curCap = "";
+      for(let i=0; i<6; i++) curCap += c.charAt(Math.floor(Math.random()*c.length));
+      document.getElementById('capText').innerText = curCap;
+      document.getElementById('capInput').value = "";
+    }
+    function openCaptcha() { nav('captcha'); genCap(); }
+    function submitCaptcha() {
+      if(document.getElementById('capInput').value.trim().toUpperCase() === curCap) {
+        addCoins(1.5); showProAlert("Success", "Correct! +1.5 Coins Added"); nav('home');
+      } else { showProAlert("Error", "Wrong Captcha! Try again."); genCap(); }
+    }
+  </script>
+</body>
+</html>
